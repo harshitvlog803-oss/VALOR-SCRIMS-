@@ -1,0 +1,6 @@
+{
+  "name": "VALOR SCRIMS",
+  "description": "VALOR SCRIMS - Free Fire esports tournament platform with real-time scoreboards, bracket generation, FamPay QR wallet, and two-tier owner tournament management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
