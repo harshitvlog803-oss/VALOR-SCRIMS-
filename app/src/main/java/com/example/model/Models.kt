@@ -121,21 +121,21 @@ data class PlayerProfile(
     val phoneNumber: String = "9813700369",
     val password: String = "pass123",
     val isLoggedIn: Boolean = false,
-    val vaultBalance: Int = 120, // default vault balance in rupees
-    val totalEarnings: Int = 850,
-    val matchesPlayed: Int = 18,
-    val booyahs: Int = 7,
-    val kills: Int = 49,
+    val vaultBalance: Int = 0, // default vault balance is strictly 0 rupees
+    val totalEarnings: Int = 0,
+    val matchesPlayed: Int = 0,
+    val booyahs: Int = 0,
+    val kills: Int = 0,
     val badges: List<PlayerBadge> = defaultBadges()
 )
 
 fun defaultBadges(): List<PlayerBadge> = listOf(
-    PlayerBadge("grandmaster", "Grandmaster Tier", "Top 1% Elite Winner", "👑", true, "Win 5+ Tournaments"),
-    PlayerBadge("headshot", "Headshot King", "60%+ Lethal Aim", "🎯", true, "30+ Tournament Kills"),
-    PlayerBadge("ace_survivor", "Ace Survivor", "Top 3 Placement Master", "🛡️", true, "Reach Top 3 in 5 matches"),
-    PlayerBadge("clash_warlord", "Clash Squad Warlord", "Undefeated in 4v4 CS", "🔥", true, "Win 3 CS matches"),
-    PlayerBadge("mvp_week", "MVP of the Week", "Highest Weekly Points", "⚡", true, "Rank #1 on Weekly Board"),
-    PlayerBadge("high_roller", "High Roller", "Over ₹500 Won", "💰", true, "Accumulate ₹500+ winnings")
+    PlayerBadge("grandmaster", "Grandmaster Tier", "Top 1% Elite Winner", "👑", false, "Win 5+ Tournaments"),
+    PlayerBadge("headshot", "Headshot King", "60%+ Lethal Aim", "🎯", false, "30+ Tournament Kills"),
+    PlayerBadge("ace_survivor", "Ace Survivor", "Top 3 Placement Master", "🛡️", false, "Reach Top 3 in 5 matches"),
+    PlayerBadge("clash_warlord", "Clash Squad Warlord", "Undefeated in 4v4 CS", "🔥", false, "Win 3 CS matches"),
+    PlayerBadge("mvp_week", "MVP of the Week", "Highest Weekly Points", "⚡", false, "Rank #1 on Weekly Board"),
+    PlayerBadge("high_roller", "High Roller", "Over ₹500 Won", "💰", false, "Accumulate ₹500+ winnings")
 )
 
 data class LeaderboardPlayer(
@@ -149,9 +149,8 @@ data class LeaderboardPlayer(
 )
 
 data class AdminConfig(
-    val owner1Pin: String = "0105",
-    val owner1RequiresPin: Boolean = true,
-    val owner2Pin: String = "2424",
+    val owner1RequiresPin: Boolean = false, // 1st Owner has NO PIN code (direct 1-tap Super Admin access)
+    val owner2Pin: String = "0105", // 2nd Owner PIN code is 0105 (private and hidden)
     val owner2Name: String = "Harshit VALOR Manager",
     val owner2Phone: String = "7207080543",
     val owner2Enabled: Boolean = true,

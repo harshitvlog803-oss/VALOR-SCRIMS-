@@ -193,9 +193,9 @@ fun AdminPanelScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            if (selectedLoginRole == OwnerRole.OWNER_1 && !adminConfig.owner1RequiresPin) {
+                            if (selectedLoginRole == OwnerRole.OWNER_1) {
                                 Surface(
-                                    color = ElectricGreen.copy(alpha = 0.15f),
+                                    color = NeonFireOrange.copy(alpha = 0.15f),
                                     shape = RoundedCornerShape(10.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
@@ -203,11 +203,11 @@ fun AdminPanelScreen(
                                         modifier = Modifier.padding(12.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = ElectricGreen, modifier = Modifier.size(20.dp))
+                                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = NeonFireOrange, modifier = Modifier.size(20.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Column {
-                                            Text("1 Owner No PIN Code Mode Active", color = ElectricGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                            Text("Direct 1-tap Super Admin access is enabled for 1st Owner.", color = TextSecondary, fontSize = 11.sp)
+                                            Text("1st Owner: No PIN Code Required", color = NeonFireOrange, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                            Text("Direct 1-tap Super Admin access to customize FamPay QR code, UPI ID & 2nd Owner.", color = TextSecondary, fontSize = 11.sp)
                                         }
                                     }
                                 }
@@ -215,12 +215,8 @@ fun AdminPanelScreen(
                                 OutlinedTextField(
                                     value = enteredPin,
                                     onValueChange = { enteredPin = it.filter { ch -> ch.isDigit() } },
-                                    label = {
-                                        Text(
-                                            if (selectedLoginRole == OwnerRole.OWNER_1) "Enter 1st Owner Private PIN (Default: 0105)"
-                                            else "Enter 2nd Owner PIN"
-                                        )
-                                    },
+                                    label = { Text("Enter 2nd Owner PIN") },
+                                    placeholder = { Text("••••") },
                                     visualTransformation = PasswordVisualTransformation(),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                                     modifier = Modifier
@@ -228,7 +224,7 @@ fun AdminPanelScreen(
                                         .testTag("admin_pin_input"),
                                     shape = RoundedCornerShape(12.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = NeonFireOrange,
+                                        focusedBorderColor = ElectricCyan,
                                         unfocusedBorderColor = BorderDark,
                                         focusedTextColor = TextPrimary,
                                         unfocusedTextColor = TextPrimary
@@ -240,7 +236,8 @@ fun AdminPanelScreen(
 
                             Button(
                                 onClick = {
-                                    val success = viewModel.loginOwner(selectedLoginRole, enteredPin)
+                                    val pinToUse = if (selectedLoginRole == OwnerRole.OWNER_1) "" else enteredPin
+                                    val success = viewModel.loginOwner(selectedLoginRole, pinToUse)
                                     if (success) {
                                         enteredPin = ""
                                     }
@@ -257,8 +254,8 @@ fun AdminPanelScreen(
                                 Icon(Icons.Default.LockOpen, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    if (selectedLoginRole == OwnerRole.OWNER_1 && !adminConfig.owner1RequiresPin) "Enter as 1st Owner (No PIN Required)"
-                                    else "Unlock ${if (selectedLoginRole == OwnerRole.OWNER_1) "1st Owner" else "2nd Owner"} Panel",
+                                    if (selectedLoginRole == OwnerRole.OWNER_1) "Enter as 1st Owner (No PIN Required)"
+                                    else "Unlock 2nd Owner Panel (Tournament Organiser)",
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -317,119 +314,38 @@ fun AdminPanelScreen(
                     }
                 }
 
-                // 1ST OWNER ONLY: Change 1st Owner PIN (Default: 0105)
+                // 1ST OWNER ONLY: Authority Overview (No PIN Required, QR Customization)
                 if (activeRole == OwnerRole.OWNER_1) {
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = GamingCard)
+                            colors = CardDefaults.cardColors(containerColor = GamingCard),
+                            border = CardDefaults.outlinedCardBorder().copy(
+                                brush = Brush.horizontalGradient(listOf(NeonFireOrange, NeonGold))
+                            )
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
-                                Text(
-                                    "1st Owner Private PIN & Security",
-                                    color = TextPrimary,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp
-                                )
-                                Text(
-                                    "Private PIN: ${adminConfig.owner1Pin} • Change PIN anytime with NO LIMIT • Or use No PIN Code mode",
-                                    color = NeonGold,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-
-                                Spacer(modifier = Modifier.height(12.dp))
-
-                                // Toggle: 1 Owner No PIN Code Mode
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(Color(0xFF141724))
-                                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            "Require PIN for 1st Owner",
-                                            color = TextPrimary,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 13.sp
-                                        )
-                                        Text(
-                                            if (adminConfig.owner1RequiresPin) "Private PIN code is required (${adminConfig.owner1Pin})"
-                                            else "🔓 '1 Owner No PIN Code' active: 1st Owner enters with 1-tap directly!",
-                                            color = if (adminConfig.owner1RequiresPin) TextSecondary else ElectricGreen,
-                                            fontSize = 11.sp
-                                        )
-                                    }
-                                    Switch(
-                                        checked = adminConfig.owner1RequiresPin,
-                                        onCheckedChange = { viewModel.toggleOwner1RequiresPin(it) },
-                                        colors = SwitchDefaults.colors(checkedThumbColor = NeonFireOrange)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = NeonGold)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        "1st Owner Authority & Controls",
+                                        color = TextPrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 15.sp
                                     )
                                 }
-
-                                Spacer(modifier = Modifier.height(14.dp))
-
+                                Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    "Change Private PIN Code (No Limit):",
+                                    "👑 1st Owner has NO PIN code (1-tap direct Super Admin access).\n" +
+                                    "• Exclusively customize FamPay QR Code & UPI ID\n" +
+                                    "• Choose & configure 2nd Owner credentials\n" +
+                                    "• 2nd Owner exclusively organizes tournaments & manages payouts",
                                     color = TextSecondary,
                                     fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium
+                                    lineHeight = 18.sp
                                 )
-                                Spacer(modifier = Modifier.height(6.dp))
-
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    OutlinedTextField(
-                                        value = oldPinInput,
-                                        onValueChange = { oldPinInput = it.filter { ch -> ch.isDigit() } },
-                                        label = { Text("Current PIN") },
-                                        visualTransformation = PasswordVisualTransformation(),
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                                        modifier = Modifier.weight(1f),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = NeonFireOrange,
-                                            unfocusedBorderColor = BorderDark,
-                                            focusedTextColor = TextPrimary,
-                                            unfocusedTextColor = TextPrimary
-                                        )
-                                    )
-
-                                    OutlinedTextField(
-                                        value = newPinInput,
-                                        onValueChange = { newPinInput = it.filter { ch -> ch.isDigit() } },
-                                        label = { Text("New PIN (Any 4+ digits)") },
-                                        visualTransformation = PasswordVisualTransformation(),
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                                        modifier = Modifier.weight(1f),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = NeonFireOrange,
-                                            unfocusedBorderColor = BorderDark,
-                                            focusedTextColor = TextPrimary,
-                                            unfocusedTextColor = TextPrimary
-                                        )
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(12.dp))
-
-                                Button(
-                                    onClick = {
-                                        if (viewModel.updateOwner1Pin(oldPinInput, newPinInput)) {
-                                            oldPinInput = ""
-                                            newPinInput = ""
-                                        }
-                                    },
-                                    colors = ButtonDefaults.buttonColors(containerColor = NeonFireOrange),
-                                    shape = RoundedCornerShape(10.dp)
-                                ) {
-                                    Icon(Icons.Default.VpnKey, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Change PIN (No Limit)", fontWeight = FontWeight.Bold)
-                                }
                             }
                         }
                     }
@@ -633,32 +549,33 @@ fun AdminPanelScreen(
                     }
                 }
 
-                // BOTH 1ST & 2ND OWNER: Organise Tournaments
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = GamingCard),
-                        border = CardDefaults.outlinedCardBorder().copy(
-                            brush = Brush.verticalGradient(listOf(NeonFireOrange.copy(alpha = 0.5f), BorderDark))
-                        )
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.AddBox, contentDescription = null, tint = NeonFireOrange)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    "Organise New Tournament",
-                                    color = TextPrimary,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
-                                )
-                            }
-                            Text(
-                                "Organise option is available for both 1st Owner and 2nd Owner",
-                                color = TextSecondary,
-                                fontSize = 12.sp
+                // 2ND OWNER ONLY: Organise Tournaments
+                if (activeRole == OwnerRole.OWNER_2) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = GamingCard),
+                            border = CardDefaults.outlinedCardBorder().copy(
+                                brush = Brush.verticalGradient(listOf(NeonFireOrange.copy(alpha = 0.5f), BorderDark))
                             )
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.AddBox, contentDescription = null, tint = NeonFireOrange)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        "Organise New Tournament (2nd Owner)",
+                                        color = TextPrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp
+                                    )
+                                }
+                                Text(
+                                    "Exclusive tournament organising controls for 2nd Owner (${adminConfig.owner2Name})",
+                                    color = TextSecondary,
+                                    fontSize = 12.sp
+                                )
 
                             Spacer(modifier = Modifier.height(14.dp))
 
@@ -860,6 +777,7 @@ fun AdminPanelScreen(
                         }
                     }
                 }
+            }
 
                 // MANAGE PAYOUTS & EARNINGS DISTRIBUTION (2nd Owner primary role & 1st Owner)
                 item {

@@ -165,28 +165,6 @@ class TournamentViewModel(
         showToast("Logged out of Owner Panel")
     }
 
-    fun toggleOwner1RequiresPin(requiresPin: Boolean): Boolean {
-        val res = repository.setOwner1RequiresPin(requiresPin)
-        return if (res.isSuccess) {
-            showToast(if (requiresPin) "🔒 1st Owner private PIN code requirement enabled" else "🔓 1st Owner No PIN Code mode enabled")
-            true
-        } else {
-            showToast("❌ ${res.exceptionOrNull()?.message}")
-            false
-        }
-    }
-
-    fun updateOwner1Pin(oldPin: String, newPin: String): Boolean {
-        val res = repository.updateOwner1Pin(oldPin, newPin)
-        return if (res.isSuccess) {
-            showToast("✅ 1st Owner Private PIN updated successfully to $newPin")
-            true
-        } else {
-            showToast("❌ ${res.exceptionOrNull()?.message}")
-            false
-        }
-    }
-
     fun updateOwner2Credentials(name: String, phone: String, pin: String, enabled: Boolean): Boolean {
         val res = repository.updateOwner2Credentials(name, phone, pin, enabled)
         return if (res.isSuccess) {

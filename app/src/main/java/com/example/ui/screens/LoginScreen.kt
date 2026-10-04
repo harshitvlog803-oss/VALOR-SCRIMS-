@@ -266,7 +266,7 @@ fun LoginScreen(
                                 fontSize = 16.sp
                             )
                             Text(
-                                "Get ₹20 Welcome Bonus credited to your in-app vault!",
+                                "Initial Vault balance is ₹0. Add money via FamPay QR to play tournaments!",
                                 color = NeonGold,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold
@@ -380,7 +380,7 @@ fun LoginScreen(
                             ) {
                                 Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Register & Claim ₹20 Bonus", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
+                                Text("Create Account & Start (₹0 Vault Balance)", fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
                             }
                         }
                     }

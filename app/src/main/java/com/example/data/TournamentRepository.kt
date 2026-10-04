@@ -354,13 +354,12 @@ class TournamentRepository {
     fun loginOwner(role: OwnerRole, pin: String): Boolean {
         return when (role) {
             OwnerRole.OWNER_1 -> {
-                // If 1st Owner enabled "No PIN code" mode, allow login directly
-                if (!_adminConfig.value.owner1RequiresPin || pin.trim() == _adminConfig.value.owner1Pin) {
-                    _activeOwnerRole.value = OwnerRole.OWNER_1
-                    true
-                } else false
+                // Owner 1 has NO PIN: direct 1-tap Super Admin access
+                _activeOwnerRole.value = OwnerRole.OWNER_1
+                true
             }
             OwnerRole.OWNER_2 -> {
+                // Owner 2 PIN is 0105
                 if (_adminConfig.value.owner2Enabled && pin.trim() == _adminConfig.value.owner2Pin) {
                     _activeOwnerRole.value = OwnerRole.OWNER_2
                     true
@@ -375,30 +374,6 @@ class TournamentRepository {
 
     fun logoutOwner() {
         _activeOwnerRole.value = OwnerRole.NONE
-    }
-
-    // 1 Owner can toggle PIN requirement or use "No PIN code" mode
-    fun setOwner1RequiresPin(requiresPin: Boolean): Result<Unit> {
-        if (_activeOwnerRole.value != OwnerRole.OWNER_1) {
-            return Result.failure(SecurityException("Only 1st Owner can toggle PIN requirement!"))
-        }
-        _adminConfig.update { it.copy(owner1RequiresPin = requiresPin) }
-        return Result.success(Unit)
-    }
-
-    // 1 Owner can change private PIN anytime with no limit
-    fun updateOwner1Pin(oldPin: String, newPin: String): Result<Unit> {
-        if (_activeOwnerRole.value != OwnerRole.OWNER_1) {
-            return Result.failure(SecurityException("Only 1st Owner can change the Owner 1 PIN!"))
-        }
-        if (_adminConfig.value.owner1RequiresPin && oldPin != _adminConfig.value.owner1Pin) {
-            return Result.failure(IllegalArgumentException("Current PIN is incorrect."))
-        }
-        if (newPin.trim().length < 4) {
-            return Result.failure(IllegalArgumentException("PIN must be at least 4 digits."))
-        }
-        _adminConfig.update { it.copy(owner1Pin = newPin.trim()) }
-        return Result.success(Unit)
     }
 
     // 1 Owner chooses who is 2 Owner
@@ -417,10 +392,10 @@ class TournamentRepository {
         return Result.success(Unit)
     }
 
-    // "add 1 owner fam pay QR CODE not change QR by 2 owner right only change QR only for 1 owner"
+    // Only 1 Owner can customize FamPay QR CODE & UPI ID etc.
     fun updateFamPayUpi(newUpi: String): Result<Unit> {
         if (_activeOwnerRole.value != OwnerRole.OWNER_1) {
-            return Result.failure(SecurityException("Permission Denied: Only 1st Owner has the right to change the FamPay QR and UPI ID! 2nd Owner cannot change QR code."))
+            return Result.failure(SecurityException("Permission Denied: Only 1st Owner can customize FamPay QR CODE and UPI ID!"))
         }
         if (newUpi.trim().isBlank() || !newUpi.contains("@")) {
             return Result.failure(IllegalArgumentException("Invalid UPI ID. Example: 9813700369@fam"))
@@ -429,18 +404,18 @@ class TournamentRepository {
         return Result.success(Unit)
     }
 
-    // "add tournament organise option option is only for 1 owner and 2 owner"
+    // "Only see owner 2 login and organise tournament" - Owner 2 exclusively organises tournaments
     fun createTournament(tournament: Tournament): Result<Unit> {
-        if (_activeOwnerRole.value != OwnerRole.OWNER_1 && _activeOwnerRole.value != OwnerRole.OWNER_2) {
-            return Result.failure(SecurityException("Only 1st Owner and 2nd Owner can organise tournaments!"))
+        if (_activeOwnerRole.value != OwnerRole.OWNER_2) {
+            return Result.failure(SecurityException("Only 2nd Owner can organise tournaments!"))
         }
         _tournaments.update { listOf(tournament) + it }
         return Result.success(Unit)
     }
 
     fun updateRoomCredentials(tournamentId: String, roomId: String, pass: String): Result<Unit> {
-        if (_activeOwnerRole.value != OwnerRole.OWNER_1 && _activeOwnerRole.value != OwnerRole.OWNER_2) {
-            return Result.failure(SecurityException("Only 1st Owner and 2nd Owner can set Room ID & Password!"))
+        if (_activeOwnerRole.value != OwnerRole.OWNER_2) {
+            return Result.failure(SecurityException("Only 2nd Owner can set Room ID & Password!"))
         }
         _tournaments.update { list ->
             list.map {
@@ -451,8 +426,8 @@ class TournamentRepository {
     }
 
     fun updateTournamentStatus(tournamentId: String, newStatus: TournamentStatus): Result<Unit> {
-        if (_activeOwnerRole.value != OwnerRole.OWNER_1 && _activeOwnerRole.value != OwnerRole.OWNER_2) {
-            return Result.failure(SecurityException("Only 1st Owner and 2nd Owner can update tournament status!"))
+        if (_activeOwnerRole.value != OwnerRole.OWNER_2 && _activeOwnerRole.value != OwnerRole.OWNER_1) {
+            return Result.failure(SecurityException("Only authorized Owners can update tournament status!"))
         }
         _tournaments.update { list ->
             list.map {
@@ -550,17 +525,9 @@ class TournamentRepository {
                 phoneNumber = phone.trim(),
                 password = pass.trim(),
                 isLoggedIn = true,
-                vaultBalance = it.vaultBalance + 20 // ₹20 Welcome Bonus!
+                vaultBalance = 0 // Any player downloads this app vault balance is 0
             )
         }
-        val bonusTx = WalletTransaction(
-            id = "bonus-${System.currentTimeMillis()}",
-            type = TransactionType.DEPOSIT,
-            amount = 20,
-            status = TransactionStatus.COMPLETED,
-            description = "🎉 Welcome to VALOR SCRIMS Signup Bonus"
-        )
-        _transactions.update { listOf(bonusTx) + it }
         return Result.success(Unit)
     }
 

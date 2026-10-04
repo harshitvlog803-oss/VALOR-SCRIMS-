@@ -394,27 +394,32 @@ fun HomeScreen(
                     )
                 }
 
-                // Organise Option: Restricted to 1st Owner & 2nd Owner
-                Button(
-                    onClick = {
-                        val role = activeRole
-                        if (role == OwnerRole.OWNER_1 || role == OwnerRole.OWNER_2) {
-                            viewModel.navigateTo(Screen.OrganiseTournament)
-                        } else {
-                            showOrganiseAuthDialog = true
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = NeonFireOrange,
-                        contentColor = TextPrimary
-                    ),
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                    modifier = Modifier.testTag("organise_tournament_button")
-                ) {
-                    Icon(Icons.Default.AddCircle, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Organise (Owner 1 & 2)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                // Organise Option: Restricted strictly to 2nd Owner (hidden for 1st Owner)
+                if (activeRole != OwnerRole.OWNER_1) {
+                    Button(
+                        onClick = {
+                            if (activeRole == OwnerRole.OWNER_2) {
+                                viewModel.navigateTo(Screen.OrganiseTournament)
+                            } else {
+                                showOrganiseAuthDialog = true
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = ElectricCyan,
+                            contentColor = GamingDarkBackground
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier.testTag("organise_tournament_button")
+                    ) {
+                        Icon(Icons.Default.AddCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            if (activeRole == OwnerRole.OWNER_2) "Organise Match" else "Organise (Owner 2)",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
@@ -461,31 +466,32 @@ fun HomeScreen(
         }
     }
 
-    // Floating Organise Tournament Action Button (Owner 1 & 2 only)
-    ExtendedFloatingActionButton(
-        onClick = {
-            val role = activeRole
-            if (role == OwnerRole.OWNER_1 || role == OwnerRole.OWNER_2) {
-                viewModel.navigateTo(Screen.OrganiseTournament)
-            } else {
-                showOrganiseAuthDialog = true
-            }
-        },
-        icon = { Icon(Icons.Default.AddCircle, contentDescription = null, tint = TextPrimary) },
-        text = {
-            Text(
-                text = if (activeRole == OwnerRole.OWNER_1 || activeRole == OwnerRole.OWNER_2) "Organise Match" else "Organise (Owner 1 & 2)",
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp
-            )
-        },
-        containerColor = NeonFireOrange,
-        contentColor = TextPrimary,
-        modifier = Modifier
-            .align(Alignment.BottomEnd)
-            .padding(16.dp)
-            .testTag("fab_organise_tournament")
-    )
+    // Floating Organise Tournament Action Button (2nd Owner only - hidden for 1st Owner)
+    if (activeRole != OwnerRole.OWNER_1) {
+        ExtendedFloatingActionButton(
+            onClick = {
+                if (activeRole == OwnerRole.OWNER_2) {
+                    viewModel.navigateTo(Screen.OrganiseTournament)
+                } else {
+                    showOrganiseAuthDialog = true
+                }
+            },
+            icon = { Icon(Icons.Default.AddCircle, contentDescription = null, tint = GamingDarkBackground) },
+            text = {
+                Text(
+                    text = if (activeRole == OwnerRole.OWNER_2) "Organise Match" else "Organise (Owner 2)",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp
+                )
+            },
+            containerColor = ElectricCyan,
+            contentColor = GamingDarkBackground,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+                .testTag("fab_organise_tournament")
+        )
+    }
 
     // --- Booking Modal Dialog with Automatic Balance Deduction & Vault Balance Check ---
     bookingDialogTournament?.let { tourn ->
@@ -702,112 +708,44 @@ fun HomeScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        "Please verify your Owner credentials to publish a new tournament.",
+                        "Only 2nd Owner has the authority to organise tournaments and publish matches to VALOR SCRIMS.\n\nEnter 2nd Owner PIN code to unlock:",
                         color = TextSecondary,
                         fontSize = 12.sp
                     )
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // Role Selector (Owner 1 vs Owner 2)
-                    Row(
+                    OutlinedTextField(
+                        value = authPinInput,
+                        onValueChange = { authPinInput = it.filter { ch -> ch.isDigit() } },
+                        label = { Text("Enter 2nd Owner PIN") },
+                        placeholder = { Text("••••") },
+                        visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFF141624))
-                            .padding(4.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (authSelectedRole == OwnerRole.OWNER_1) NeonFireOrange else Color.Transparent)
-                                .clickable { authSelectedRole = OwnerRole.OWNER_1 }
-                                .padding(vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "1st Owner",
-                                color = if (authSelectedRole == OwnerRole.OWNER_1) TextPrimary else TextSecondary,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
-                            )
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (authSelectedRole == OwnerRole.OWNER_2) ElectricCyan else Color.Transparent)
-                                .clickable { authSelectedRole = OwnerRole.OWNER_2 }
-                                .padding(vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "2nd Owner",
-                                color = if (authSelectedRole == OwnerRole.OWNER_2) GamingDarkBackground else TextSecondary,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    if (authSelectedRole == OwnerRole.OWNER_1 && !adminConfig.owner1RequiresPin) {
-                        Surface(
-                            color = ElectricGreen.copy(alpha = 0.15f),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = ElectricGreen, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    "1 Owner No PIN Code Mode is Active! Tap Unlock to proceed directly.",
-                                    color = ElectricGreen,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    } else {
-                        OutlinedTextField(
-                            value = authPinInput,
-                            onValueChange = { authPinInput = it.filter { ch -> ch.isDigit() } },
-                            label = {
-                                Text(
-                                    if (authSelectedRole == OwnerRole.OWNER_1) "Enter 1st Owner Private PIN (Default: 0105)"
-                                    else "Enter 2nd Owner PIN"
-                                )
-                            },
-                            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("organise_auth_pin_input"),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = NeonFireOrange,
-                                unfocusedBorderColor = BorderDark,
-                                focusedTextColor = TextPrimary,
-                                unfocusedTextColor = TextPrimary
-                            )
+                            .testTag("organise_auth_pin_input"),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = ElectricCyan,
+                            unfocusedBorderColor = BorderDark,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary
                         )
-                    }
+                    )
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        val success = viewModel.loginOwner(authSelectedRole, authPinInput)
+                        val success = viewModel.loginOwner(OwnerRole.OWNER_2, authPinInput)
                         if (success) {
                             showOrganiseAuthDialog = false
                             authPinInput = ""
                             viewModel.navigateTo(Screen.OrganiseTournament)
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = NeonFireOrange),
+                    colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan, contentColor = GamingDarkBackground),
                     shape = RoundedCornerShape(10.dp)
                 ) {
                     Text("Unlock & Organise", fontWeight = FontWeight.Bold)

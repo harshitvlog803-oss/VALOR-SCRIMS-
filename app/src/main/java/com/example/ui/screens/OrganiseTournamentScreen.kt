@@ -75,50 +75,88 @@ fun OrganiseTournamentScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Authority Banner
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = GamingCard),
-                    border = CardDefaults.outlinedCardBorder().copy(
-                        brush = Brush.horizontalGradient(
-                            if (activeRole == OwnerRole.OWNER_1) listOf(NeonFireOrange, NeonGold)
-                            else listOf(ElectricCyan, ElectricGreen)
+            if (activeRole != OwnerRole.OWNER_2) {
+                // Not 2nd Owner View
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = GamingCard),
+                        border = CardDefaults.outlinedCardBorder().copy(
+                            brush = Brush.horizontalGradient(listOf(ElectricCyan, ElectricGreen))
                         )
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier.padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(if (activeRole == OwnerRole.OWNER_1) "👑" else "🛡️", fontSize = 26.sp)
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("🛡️", fontSize = 48.sp)
+                            Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                if (activeRole == OwnerRole.OWNER_1) "1st Owner Organiser Portal"
-                                else "2nd Owner Organiser Portal",
+                                "2nd Owner Tournament Organiser",
                                 color = TextPrimary,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp
+                                fontWeight = FontWeight.Black,
+                                fontSize = 18.sp
                             )
+                            Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                "🔒 Authorised: Only 1st Owner and 2nd Owner can publish matches",
-                                color = if (activeRole == OwnerRole.OWNER_1) NeonGold else ElectricCyan,
-                                fontSize = 11.sp
+                                "Only 2nd Owner can organise and publish tournaments to VALOR SCRIMS. 1st Owner is restricted from organizing tournaments and manages FamPay QR settings.\n\nPlease authenticate as 2nd Owner to continue.",
+                                color = TextSecondary,
+                                fontSize = 13.sp,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
                             )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = { viewModel.navigateTo(Screen.Admin) },
+                                colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan, contentColor = GamingDarkBackground),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text("Login as 2nd Owner", fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
-            }
+            } else {
+                // 2nd Owner Organiser Portal
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = GamingCard),
+                        border = CardDefaults.outlinedCardBorder().copy(
+                            brush = Brush.horizontalGradient(listOf(ElectricCyan, ElectricGreen))
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("🛡️", fontSize = 26.sp)
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    "2nd Owner Organiser Portal",
+                                    color = TextPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp
+                                )
+                                Text(
+                                    "🔒 Authorised: 2nd Owner can configure matches, entry fees & secret room ID",
+                                    color = ElectricCyan,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                    }
+                }
 
-            // Form Card
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = GamingCard)
-                ) {
+                // Form Card
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = GamingCard)
+                    ) {
                     Column(modifier = Modifier.padding(18.dp)) {
                         Text("Tournament Information", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         Spacer(modifier = Modifier.height(14.dp))
@@ -387,4 +425,5 @@ fun OrganiseTournamentScreen(
             }
         }
     }
+}
 }

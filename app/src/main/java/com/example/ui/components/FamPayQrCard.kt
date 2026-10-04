@@ -721,70 +721,49 @@ fun FamPayQrCard(
         )
     }
 
-    // Owner 1 Verification Dialog (Only Owner 1 can change App QR)
+    // Owner 1 Verification Dialog (Only Owner 1 can customize App QR)
     if (showOwner1PinDialog) {
         AlertDialog(
             onDismissRequest = {
                 showOwner1PinDialog = false
-                owner1PinInput = ""
             },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("👑 ", fontSize = 20.sp)
-                    Text("1st Owner QR Verification", color = NeonGold, fontWeight = FontWeight.Bold)
+                    Text("1st Owner QR Customization", color = NeonGold, fontWeight = FontWeight.Bold)
                 }
             },
             text = {
                 Column {
                     Text(
-                        "Only 1st Owner has the authority to change the app FamPay QR code and UPI ID!\n\n2nd Owner and players cannot modify the QR code.\n\nEnter 1st Owner PIN to unlock (Default: 0105):",
+                        "Only 1st Owner has the authority to customize the app FamPay QR code and UPI ID!\n\n2nd Owner and players cannot modify the QR code.\n\n1st Owner has NO PIN code. Tap below to proceed and customize the QR code:",
                         color = TextSecondary,
                         fontSize = 13.sp
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = owner1PinInput,
-                        onValueChange = { owner1PinInput = it.filter { ch -> ch.isDigit() } },
-                        label = { Text("1st Owner PIN") },
-                        visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("owner1_qr_pin_input"),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NeonGold,
-                            unfocusedBorderColor = BorderDark,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary
-                        )
                     )
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        val verified = onVerifyOwner1Pin?.invoke(owner1PinInput) ?: false
+                        val verified = onVerifyOwner1Pin?.invoke("") ?: false
                         if (verified) {
                             showOwner1PinDialog = false
-                            owner1PinInput = ""
                             editingUpiInput = upiId
                             showEditUpiDialog = true
-                            Toast.makeText(context, "🔓 1st Owner Verified: You can now change the app QR code!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "🔓 1st Owner Verified: You can now customize the app QR code & UPI ID!", Toast.LENGTH_SHORT).show()
                         } else {
-                            Toast.makeText(context, "❌ Access Denied: Incorrect PIN! Only 1st Owner can change the app QR code. 2nd Owner and players cannot change QR.", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, "❌ Access Denied: Only 1st Owner can customize the app QR code.", Toast.LENGTH_LONG).show()
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = NeonGold, contentColor = GamingDarkBackground),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text("Verify & Change QR", fontWeight = FontWeight.Bold)
+                    Text("Confirm & Customize QR", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = {
                     showOwner1PinDialog = false
-                    owner1PinInput = ""
                 }) {
                     Text("Cancel", color = TextSecondary)
                 }
