@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VALOR SCRIMS - Free Fire Tournaments & Esports Hub</title>
+  <meta name="description" content="Official VALOR SCRIMS App Portal. Book Free Fire esports tournaments, win cash prizes up to ₹2,500, FamPay UPI wallet, and real-time leaderboard." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Teko:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0A0B10;
+      --bg-card: #141724;
+      --bg-card-hover: #1C2033;
+      --fire-orange: #FF5E1E;
+      --fire-orange-light: #FF8533;
+      --neon-gold: #FFD23F;
+      --neon-cyan: #00F0FF;
+      --neon-green: #00E676;
+      --text-primary: #FFFFFF;
+      --text-secondary: #9FA6BF;
+      --border-dark: #2A3047;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      font-family: 'Outfit', sans-serif;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    /* Ambient glow backgrounds */
+    .glow-circle {
+      position: absolute;
+      width: 450px;
+      height: 450px;
+      border-radius: 50%;
+      filter: blur(140px);
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .glow-orange {
+      top: -100px;
+      left: 10%;
+      background: var(--fire-orange);
+    }
+    .glow-cyan {
+      top: 500px;
+      right: 5%;
+      background: var(--neon-cyan);
+    }
+
+    /* Navigation */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 11, 16, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-dark);
+    }
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .logo-badge {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--fire-orange), #D62828);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 0 20px rgba(255, 94, 30, 0.4);
+    }
+    .logo-title {
+      font-family: 'Teko', sans-serif;
+      font-size: 32px;
+      letter-spacing: 1.5px;
+      color: #fff;
+      line-height: 1;
+    }
+    .logo-subtitle {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--neon-gold);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover {
+      color: #fff;
+    }
+    .btn-download-nav {
+      background: linear-gradient(135deg, var(--fire-orange), #FF3B30);
+      color: #fff !important;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-weight: 700 !important;
+      box-shadow: 0 4px 15px rgba(255, 94, 30, 0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-download-nav:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 22px rgba(255, 94, 30, 0.5);
+    }
+
+    /* Hero Section */
+    .hero {
+      position: relative;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 60px 20px 40px;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 40px;
+      align-items: center;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 94, 30, 0.15);
+      border: 1px solid rgba(255, 94, 30, 0.4);
+      padding: 6px 14px;
+      border-radius: 30px;
+      color: var(--fire-orange-light);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .hero-title {
+      font-size: 54px;
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: -0.5px;
+    }
+    .hero-title span {
+      background: linear-gradient(135deg, var(--fire-orange), var(--neon-gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-desc {
+      color: var(--text-secondary);
+      font-size: 17px;
+      line-height: 1.6;
+      margin-bottom: 32px;
+      max-width: 540px;
+    }
+    .cta-group {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--fire-orange), #FF3B30);
+      color: #fff;
+      padding: 16px 32px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 8px 30px rgba(255, 94, 30, 0.4);
+      transition: all 0.25s ease;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 36px rgba(255, 94, 30, 0.6);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-dark);
+      color: #fff;
+      padding: 16px 28px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 15px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--neon-cyan);
+    }
+    .hero-stats {
+      display: flex;
+      gap: 28px;
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-dark);
+    }
+    .stat-item h4 {
+      font-size: 28px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+    }
+    .stat-item p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    /* Hero Right Showcase Card */
+    .app-preview-card {
+      background: linear-gradient(180deg, #181B2B, #10121C);
+      border: 1px solid var(--border-dark);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .preview-chip {
+      background: rgba(0, 230, 118, 0.15);
+      color: var(--neon-green);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 1px;
+    }
+    .apk-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .apk-card-title {
+      font-weight: 800;
+      font-size: 15px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .apk-card-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* Section styling */
+    section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 60px 20px;
+      position: relative;
+      z-index: 1;
+    }
+    .section-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .section-badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--neon-gold);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-size: 38px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.5px;
+    }
+    .section-subtitle {
+      color: var(--text-secondary);
+      font-size: 16px;
+      max-width: 600px;
+      margin: 8px auto 0;
+    }
+
+    /* Tournament Grid */
+    .tournaments-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 20px;
+    }
+    .tourn-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      border-radius: 20px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .tourn-card:hover {
+      border-color: var(--fire-orange);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+    .tourn-mode-tag {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .tag-squad { background: rgba(255, 94, 30, 0.15); color: var(--fire-orange); }
+    .tag-solo { background: rgba(0, 240, 255, 0.15); color: var(--neon-cyan); }
+    .tag-duo { background: rgba(255, 210, 63, 0.15); color: var(--neon-gold); }
+    .tag-cs { background: rgba(224, 64, 251, 0.15); color: #E040FB; }
+
+    .tourn-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 14px 0 6px;
+    }
+    .tourn-time {
+      font-size: 13px;
+      color: var(--neon-gold);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .tourn-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 12px 8px;
+      border-radius: 12px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .metric-label {
+      font-size: 10px;
+      color: var(--text-secondary);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .metric-val {
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .metric-val.prize { color: var(--neon-gold); }
+
+    .btn-book {
+      width: 100%;
+      background: rgba(255, 94, 30, 0.15);
+      border: 1px solid var(--fire-orange);
+      color: #fff;
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      display: block;
+      transition: all 0.2s;
+    }
+    .btn-book:hover {
+      background: var(--fire-orange);
+    }
+
+    /* Leaderboard & Prize Distribution */
+    .prize-pool-banner {
+      background: linear-gradient(135deg, rgba(255, 210, 63, 0.12), rgba(255, 94, 30, 0.12));
+      border: 1px solid rgba(255, 210, 63, 0.35);
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .prize-tiers {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .tier-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+    }
+    .tier-1 { border-color: var(--neon-gold); box-shadow: 0 0 25px rgba(255, 210, 63, 0.15); }
+    .tier-2 { border-color: #C0C0C0; }
+    .tier-3 { border-color: #CD7F32; }
+
+    .tier-badge {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+    .tier-rank {
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .tier-amount {
+      font-size: 26px;
+      font-weight: 900;
+      color: #fff;
+      margin: 6px 0;
+    }
+
+    .leaderboard-table {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      border-radius: 16px;
+      overflow: hidden;
+      border-collapse: collapse;
+    }
+    .leaderboard-table th {
+      background: #111422;
+      color: var(--text-secondary);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 14px 18px;
+      text-align: left;
+    }
+    .leaderboard-table td {
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 14px;
+    }
+    .leaderboard-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .rank-num {
+      font-weight: 800;
+      color: var(--neon-gold);
+    }
+    .player-ign {
+      font-weight: 700;
+      color: #fff;
+    }
+    .prize-badge {
+      background: rgba(0, 230, 118, 0.15);
+      color: var(--neon-green);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    /* FamPay & Owner features */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      border-radius: 20px;
+      padding: 28px;
+    }
+    .feature-icon {
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+    .feature-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    .feature-desc {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .upi-box {
+      margin-top: 18px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 12px 16px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px dashed rgba(255, 94, 30, 0.4);
+    }
+    .upi-text {
+      font-family: monospace;
+      font-size: 15px;
+      color: var(--neon-gold);
+      font-weight: 700;
+    }
+
+    /* Netlify Deployment Banner */
+    .netlify-banner {
+      background: linear-gradient(135deg, #00C7B7 0%, #15847B 100%);
+      border-radius: 20px;
+      padding: 30px;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-top: 40px;
+    }
+    .netlify-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .netlify-desc {
+      font-size: 14px;
+      opacity: 0.95;
+      max-width: 650px;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-dark);
+      background: #07080C;
+      padding: 40px 20px 20px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover {
+      color: #fff;
+    }
+
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding-top: 30px;
+      }
+      .hero-title {
+        font-size: 40px;
+      }
+      .prize-tiers {
+        grid-template-columns: 1fr;
+      }
+      .nav-links {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glow-circle glow-orange"></div>
+  <div class="glow-circle glow-cyan"></div>
+
+  <!-- Navigation -->
+  <header>
+    <div class="nav-container">
+      <a href="#" class="logo-group">
+        <div class="logo-badge">🔥</div>
+        <div>
+          <div class="logo-title">VALOR SCRIMS</div>
+          <div class="logo-subtitle">Official Esports Hub</div>
+        </div>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#tournaments">Tournaments</a>
+        <a href="#leaderboard">Prizes & Leaderboard</a>
+        <a href="#fampay">FamPay Wallet</a>
+        <a href="#owners">Owner Portal</a>
+        <a href="#support">Support</a>
+        <a href="/downloads/valor-scrims.apk" class="btn-download-nav" download>
+          <span>📲 Download App (25 MB)</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main>
+    <section class="hero">
+      <div>
+        <div class="hero-badge">
+          <span>⚡</span> Free Fire Daily Cash Tournaments & Scrims
+        </div>
+        <h1 class="hero-title">
+          Compete, Win & Claim Real Cash with <span>VALOR SCRIMS</span>
+        </h1>
+        <p class="hero-desc">
+          The ultimate competitive esports platform for Free Fire players. Book any Solo, Duo, Squad, or Clash Squad tournament, pay entry fees via FamPay QR scanner, and win weekly cash prizes from a ₹2,500 prize pool!
+        </p>
+
+        <div class="cta-group">
+          <a href="/downloads/valor-scrims.apk" class="btn-primary" download>
+            <span>⬇️</span> Download Android APK (v2.4)
+          </a>
+          <a href="#tournaments" class="btn-secondary">
+            <span>🎮</span> View All Tournaments
+          </a>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat-item">
+            <h4>₹2,500</h4>
+            <p>Weekly Cash Pool</p>
+          </div>
+          <div class="stat-item">
+            <h4>₹10</h4>
+            <p>Min FamPay Deposit</p>
+          </div>
+          <div class="stat-item">
+            <h4>100%</h4>
+            <p>Protected Room ID & Pass</p>
+          </div>
+          <div class="stat-item">
+            <h4>2-Tier</h4>
+            <p>Owner Control</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- App Preview Card -->
+      <div class="app-preview-card">
+        <div class="preview-header">
+          <span style="font-weight:800; font-size:16px;">📲 ANDROID APP PACKAGE</span>
+          <span class="preview-chip">LATEST V2.4</span>
+        </div>
+
+        <div class="apk-card">
+          <div class="apk-card-title">
+            <span>🎯</span> VALOR SCRIMS Native Android App
+          </div>
+          <div class="apk-card-meta">
+            Package: <code>com.aistudio.valorscrims.ffwres</code><br>
+            Architecture: Jetpack Compose + Modern Material 3<br>
+            File Size: <strong>25.1 MB</strong> • Includes FamPay QR & Vault
+          </div>
+        </div>
+
+        <a href="/downloads/valor-scrims.apk" class="btn-primary" style="width: 100%; justify-content: center; margin-bottom: 14px;" download>
+          <span>📥</span> Direct APK Download
+        </a>
+
+        <div style="font-size: 12px; color: var(--text-secondary); text-align: center;">
+          Compatible with Android 8.0 to Android 15 • Safe, Verified Build
+        </div>
+      </div>
+    </section>
+
+    <!-- Tournaments Section (Any Player Can Book) -->
+    <section id="tournaments">
+      <div class="section-header">
+        <span class="section-badge">Live Open Tournaments</span>
+        <h2 class="section-title">All Tournaments — Any Player Can Book</h2>
+        <p class="section-subtitle">
+          Browse active scrims, verify entry fees, and secure your slot with one tap from the app.
+        </p>
+      </div>
+
+      <div class="tournaments-grid">
+        <!-- Tournament 1 -->
+        <div class="tourn-card">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="tourn-mode-tag tag-squad">Squad (4v4)</span>
+              <span style="font-size:11px; font-weight:700; color:var(--text-secondary)">MAP: BERMUDA</span>
+            </div>
+            <h3 class="tourn-title">Bermuda Squad Championship</h3>
+            <div class="tourn-time">
+              <span>🕒</span> Tonight, 8:00 PM IST
+            </div>
+            <div class="tourn-metrics">
+              <div>
+                <div class="metric-label">Prize Pool</div>
+                <div class="metric-val prize">₹1,500</div>
+              </div>
+              <div>
+                <div class="metric-label">Per Kill</div>
+                <div class="metric-val">₹25</div>
+              </div>
+              <div>
+                <div class="metric-label">Entry Fee</div>
+                <div class="metric-val">₹30</div>
+              </div>
+            </div>
+          </div>
+          <a href="/downloads/valor-scrims.apk" class="btn-book">Book Slot in App (42/48 Slots)</a>
+        </div>
+
+        <!-- Tournament 2 -->
+        <div class="tourn-card">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="tourn-mode-tag tag-solo">Solo Match</span>
+              <span style="font-size:11px; font-weight:700; color:var(--text-secondary)">MAP: KALAHARI</span>
+            </div>
+            <h3 class="tourn-title">Kalahari Solo Cash Battle</h3>
+            <div class="tourn-time">
+              <span>🕒</span> Tonight, 9:30 PM IST
+            </div>
+            <div class="tourn-metrics">
+              <div>
+                <div class="metric-label">Prize Pool</div>
+                <div class="metric-val prize">₹600</div>
+              </div>
+              <div>
+                <div class="metric-label">Per Kill</div>
+                <div class="metric-val">₹15</div>
+              </div>
+              <div>
+                <div class="metric-label">Entry Fee</div>
+                <div class="metric-val">₹15</div>
+              </div>
+            </div>
+          </div>
+          <a href="/downloads/valor-scrims.apk" class="btn-book">Book Slot in App (38/48 Slots)</a>
+        </div>
+
+        <!-- Tournament 3 -->
+        <div class="tourn-card">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="tourn-mode-tag tag-cs">Clash Squad</span>
+              <span style="font-size:11px; font-weight:700; color:var(--text-secondary)">MAP: BERMUDA</span>
+            </div>
+            <h3 class="tourn-title">Clash Squad Knockout Finale</h3>
+            <div class="tourn-time">
+              <span>🕒</span> Tomorrow, 6:00 PM IST
+            </div>
+            <div class="tourn-metrics">
+              <div>
+                <div class="metric-label">Prize Pool</div>
+                <div class="metric-val prize">₹800</div>
+              </div>
+              <div>
+                <div class="metric-label">Per Kill</div>
+                <div class="metric-val">₹20</div>
+              </div>
+              <div>
+                <div class="metric-label">Entry Fee</div>
+                <div class="metric-val">₹25</div>
+              </div>
+            </div>
+          </div>
+          <a href="/downloads/valor-scrims.apk" class="btn-book">Book Slot in App (7/8 Teams)</a>
+        </div>
+
+        <!-- Tournament 4 -->
+        <div class="tourn-card">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="tourn-mode-tag tag-duo">Duo (2v2)</span>
+              <span style="font-size:11px; font-weight:700; color:var(--text-secondary)">MAP: PURGATORY</span>
+            </div>
+            <h3 class="tourn-title">Purgatory Duo Scrims #8</h3>
+            <div class="tourn-time">
+              <span>🕒</span> Tomorrow, 8:30 PM IST
+            </div>
+            <div class="tourn-metrics">
+              <div>
+                <div class="metric-label">Prize Pool</div>
+                <div class="metric-val prize">₹500</div>
+              </div>
+              <div>
+                <div class="metric-label">Per Kill</div>
+                <div class="metric-val">₹10</div>
+              </div>
+              <div>
+                <div class="metric-label">Entry Fee</div>
+                <div class="metric-val">₹20</div>
+              </div>
+            </div>
+          </div>
+          <a href="/downloads/valor-scrims.apk" class="btn-book">Book Slot in App (18/24 Teams)</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Leaderboard & Who Will Win Prizes -->
+    <section id="leaderboard">
+      <div class="section-header">
+        <span class="section-badge">Live Rankings & Payouts</span>
+        <h2 class="section-title">Who Will Win Prizes</h2>
+        <p class="section-subtitle">
+          Weekly prize pool distribution for top-ranking players on VALOR SCRIMS.
+        </p>
+      </div>
+
+      <div class="prize-pool-banner">
+        <div>
+          <div style="font-size:12px; font-weight:800; color:var(--neon-gold); letter-spacing:1px;">TOTAL WEEKLY REWARD POOL</div>
+          <div style="font-size:36px; font-weight:900;">₹2,500 In Real Cash</div>
+          <div style="font-size:13px; color:var(--text-secondary);">Direct payout to Vault balance or FamPay UPI upon leaderboard conclusion.</div>
+        </div>
+        <div style="background:var(--fire-orange); padding:10px 20px; border-radius:12px; font-weight:800; font-size:14px;">
+          ⏳ ENDS IN: 2 DAYS 14 HOURS
+        </div>
+      </div>
+
+      <!-- Podium -->
+      <div class="prize-tiers">
+        <div class="tier-card tier-1">
+          <div class="tier-badge">👑</div>
+          <div class="tier-rank" style="color:var(--neon-gold);">1st Place Champion</div>
+          <div class="tier-amount">₹1,000</div>
+          <div style="font-size:12px; color:var(--text-secondary);">+ Champion Crown & Grandmaster Trophy</div>
+        </div>
+        <div class="tier-card tier-2">
+          <div class="tier-badge">🥈</div>
+          <div class="tier-rank" style="color:#C0C0C0;">2nd Place Runner-Up</div>
+          <div class="tier-amount">₹500</div>
+          <div style="font-size:12px; color:var(--text-secondary);">+ Silver Cup & Elite Badge</div>
+        </div>
+        <div class="tier-card tier-3">
+          <div class="tier-badge">🥉</div>
+          <div class="tier-rank" style="color:#CD7F32;">3rd Place Contender</div>
+          <div class="tier-amount">₹250</div>
+          <div style="font-size:12px; color:var(--text-secondary);">+ Bronze Shield & Master Badge</div>
+        </div>
+      </div>
+
+      <!-- Live Leaderboard Table -->
+      <table class="leaderboard-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Player IGN</th>
+            <th>Kills</th>
+            <th>Points</th>
+            <th>Projected Prize</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="rank-num">#1 👑</td>
+            <td class="player-ign">ALPHA_PRO_99</td>
+            <td>78</td>
+            <td>142</td>
+            <td><span class="prize-badge">WILL WIN ₹1,000</span></td>
+          </tr>
+          <tr>
+            <td class="rank-num">#2 🥈</td>
+            <td class="player-ign">RAISTAR_GOD</td>
+            <td>65</td>
+            <td>128</td>
+            <td><span class="prize-badge">WILL WIN ₹500</span></td>
+          </tr>
+          <tr>
+            <td class="rank-num">#3 🥉</td>
+            <td class="player-ign">KILLER_CHAMP</td>
+            <td>59</td>
+            <td>114</td>
+            <td><span class="prize-badge">WILL WIN ₹250</span></td>
+          </tr>
+          <tr>
+            <td class="rank-num">#4 ⚡</td>
+            <td class="player-ign">GOKU_FF_WAR</td>
+            <td>48</td>
+            <td>98</td>
+            <td><span class="prize-badge">WILL WIN ₹100</span></td>
+          </tr>
+          <tr>
+            <td class="rank-num">#5 🔥</td>
+            <td class="player-ign">VIPER_DEADLY</td>
+            <td>44</td>
+            <td>91</td>
+            <td><span class="prize-badge">WILL WIN ₹100</span></td>
+          </tr>
+          <tr>
+            <td class="rank-num">#6 🎯</td>
+            <td class="player-ign">NINJA_SHADOW</td>
+            <td>39</td>
+            <td>84</td>
+            <td><span class="prize-badge">WILL WIN ₹100</span></td>
+          </tr>
+          <tr>
+            <td class="rank-num">#7 💀</td>
+            <td class="player-ign">PRO_HEADSHOT</td>
+            <td>36</td>
+            <td>76</td>
+            <td><span class="prize-badge">WILL WIN ₹100</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- FamPay & Owner System Features -->
+    <section id="fampay">
+      <div class="section-header">
+        <span class="section-badge">Payments & Infrastructure</span>
+        <h2 class="section-title">FamPay UPI Wallet & Owner Controls</h2>
+      </div>
+
+      <div class="features-grid">
+        <!-- FamPay UPI Card -->
+        <div class="feature-card">
+          <div class="feature-icon">💳</div>
+          <h3 class="feature-title">FamPay QR Integration</h3>
+          <p class="feature-desc">
+            Players can top up their in-app Vault balance seamlessly with any UPI app (FamPay, PhonePe, Google Pay, Paytm) by scanning the QR code or copying the official UPI ID.
+          </p>
+          <div class="upi-box">
+            <span style="font-size:12px; color:var(--text-secondary);">OFFICIAL UPI:</span>
+            <span class="upi-text">9813700369@fam</span>
+          </div>
+          <div style="margin-top: 14px; font-size:12px; color:var(--neon-green);">
+            ✓ Minimum deposit: ₹10 only • Minimum withdrawal: &gt; ₹50
+          </div>
+        </div>
+
+        <!-- 1st Owner System -->
+        <div class="feature-card" id="owners">
+          <div class="feature-icon">👑</div>
+          <h3 class="feature-title">1st Owner (Super Admin)</h3>
+          <p class="feature-desc">
+            Equipped with private PIN <code>0105</code> by default. 1st Owner has total authority:
+          </p>
+          <ul style="margin: 14px 0 0 20px; font-size:13px; color:var(--text-secondary); line-height: 1.8;">
+            <li><strong>Change PIN Code anytime with NO LIMIT</strong></li>
+            <li><strong>Toggle "No PIN Code" mode</strong> for instant 1-tap Super Admin access</li>
+            <li><strong>Exclusive control</strong> to update the FamPay QR code & UPI ID</li>
+            <li><strong>Appoint & configure 2nd Owner</strong> with custom name, phone & PIN</li>
+          </ul>
+        </div>
+
+        <!-- 2nd Owner System -->
+        <div class="feature-card">
+          <div class="feature-icon">🛡️</div>
+          <h3 class="feature-title">2nd Owner (Tournament Manager)</h3>
+          <p class="feature-desc">
+            Chosen directly by the 1st Owner. Has dedicated access credentials (default PIN: <code>2424</code>).
+          </p>
+          <ul style="margin: 14px 0 0 20px; font-size:13px; color:var(--text-secondary); line-height: 1.8;">
+            <li>Organise and publish new tournaments</li>
+            <li>Input protected Room ID & Password</li>
+            <li>Process winner payouts & verify UTR payments</li>
+            <li>Cannot modify FamPay QR (strictly protected for 1st Owner)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Netlify Deploy Banner -->
+      <div class="netlify-banner">
+        <div>
+          <div class="netlify-title">🚀 Netlify Ready Web & APK Distribution Portal</div>
+          <div class="netlify-desc">
+            This repository includes <code>netlify.toml</code>, redirect rules, and this complete portal. When deployed to Netlify, users worldwide can browse tournaments, view prize leaderboards, and download the <strong>VALOR SCRIMS Android APK</strong> directly!
+          </div>
+        </div>
+        <a href="/downloads/valor-scrims.apk" class="btn-primary" style="background:#fff; color:#0A0B10; box-shadow:none;" download>
+          Download APK Now
+        </a>
+      </div>
+    </section>
+
+    <!-- Support Section -->
+    <section id="support">
+      <div class="section-header">
+        <span class="section-badge">Player Assistance</span>
+        <h2 class="section-title">24/7 Owner & Support Contacts</h2>
+      </div>
+
+      <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
+        <div style="background:var(--bg-card); border:1px solid var(--border-dark); border-radius:16px; padding:20px 30px; text-align:center;">
+          <div style="font-size:24px; margin-bottom:6px;">📞</div>
+          <div style="font-size:12px; color:var(--text-secondary); font-weight:700;">1ST OWNER (HARSHIT)</div>
+          <div style="font-size:18px; font-weight:800; color:var(--fire-orange);">+91 98137 00369</div>
+        </div>
+
+        <div style="background:var(--bg-card); border:1px solid var(--border-dark); border-radius:16px; padding:20px 30px; text-align:center;">
+          <div style="font-size:24px; margin-bottom:6px;">🛡️</div>
+          <div style="font-size:12px; color:var(--text-secondary); font-weight:700;">2ND OWNER (MANAGER)</div>
+          <div style="font-size:18px; font-weight:800; color:var(--neon-cyan);">+91 72070 80543</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-links">
+      <a href="#tournaments">Tournaments</a>
+      <a href="#leaderboard">Leaderboard & Prizes</a>
+      <a href="#fampay">FamPay QR</a>
+      <a href="#owners">Owner Portal</a>
+      <a href="/downloads/valor-scrims.apk" download>Download APK</a>
+    </div>
+    <p>© 2026 VALOR SCRIMS Esports. All rights reserved. Free Fire is a registered trademark of Garena International.</p>
+    <p style="margin-top:6px; font-size:12px; color:#5A6178;">Ready for immediate deployment to Netlify via Git or Netlify Drop.</p>
+  </footer>
+
+</body>
+</html>

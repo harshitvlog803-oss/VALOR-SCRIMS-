@@ -37,6 +37,7 @@ import com.example.model.Tournament
 import com.example.ui.Screen
 import com.example.ui.TournamentViewModel
 import com.example.ui.components.TournamentCard
+import com.example.ui.components.FamPayTopUpDialog
 import com.example.ui.theme.*
 
 @Composable
@@ -53,6 +54,8 @@ fun HomeScreen(
     val adminConfig by viewModel.adminConfig.collectAsState()
 
     var bookingDialogTournament by remember { mutableStateOf<Tournament?>(null) }
+    var topUpDialogTournament by remember { mutableStateOf<Tournament?>(null) }
+    var showGeneralTopUpDialog by remember { mutableStateOf(false) }
     var insufficientBalanceDialogData by remember { mutableStateOf<Pair<Int, Int>?>(null) } // Pair(balance, required)
     var inputIgn by remember { mutableStateOf(profile.ign) }
     var inputUid by remember { mutableStateOf(profile.uid) }

@@ -1,0 +1,17 @@
+[build]
+  publish = "public"
+  command = "echo 'VALOR SCRIMS Web Portal & APK Distribution Ready for Netlify'"
+
+[[headers]]
+  for = "/downloads/*"
+  [headers.values]
+    Content-Type = "application/vnd.android.package-archive"
+    Content-Disposition = "attachment; filename=\"valor-scrims.apk\""
+    Access-Control-Allow-Origin = "*"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

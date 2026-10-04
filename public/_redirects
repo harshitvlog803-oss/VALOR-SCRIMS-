@@ -1,0 +1,4 @@
+# Netlify SPA and download redirects
+/downloads/app.apk  /downloads/valor-scrims.apk  301!
+/apk                /downloads/valor-scrims.apk  302!
+/*                  /index.html                  200
