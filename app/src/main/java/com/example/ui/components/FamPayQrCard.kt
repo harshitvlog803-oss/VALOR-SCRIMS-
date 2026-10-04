@@ -11,7 +11,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -53,7 +55,7 @@ fun FamPayQrCard(
 ) {
     val context = LocalContext.current
     var selectedMethodTab by remember { mutableStateOf(0) } // 0: FamX, 1: Bank
-    var scannerMode by remember { mutableStateOf(ScannerPaymentMode.ONLY_10_RUPEES) }
+    var scannerMode by remember { mutableStateOf(ScannerPaymentMode.PLAYERS_CHOICE) } // Default: Unlimited custom money add (Min ₹10)
     var depositAmountText by remember { mutableStateOf("10") }
     var utrText by remember { mutableStateOf("") }
 
@@ -62,11 +64,11 @@ fun FamPayQrCard(
     var owner1PinInput by remember { mutableStateOf("") }
     var editingUpiInput by remember(upiId) { mutableStateOf(upiId) }
 
-    val quickAmounts = listOf(10, 20, 50, 100, 200, 500)
+    val quickAmounts = listOf(10, 20, 50, 100, 200, 500, 1000, 2000, 5000)
 
     val effectiveAmount = when (scannerMode) {
         ScannerPaymentMode.ONLY_10_RUPEES -> 10
-        ScannerPaymentMode.PLAYERS_CHOICE -> depositAmountText.toIntOrNull() ?: 10
+        ScannerPaymentMode.PLAYERS_CHOICE -> (depositAmountText.toIntOrNull() ?: 10).coerceAtLeast(1)
     }
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -183,7 +185,7 @@ fun FamPayQrCard(
                     }
                 }
 
-                // Scanner Mode Selector (User request: Player's Choice Write Option VS Only 10 Rupees Scanner)
+                // Scanner Mode Selector (User request: Player add more than 10 rupees unlimited money add in app)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -191,10 +193,38 @@ fun FamPayQrCard(
                         .background(Color(0xFF141624))
                         .padding(4.dp)
                 ) {
-                    // Mode 1: Only Pay 10 Rupees Scanner
+                    // Mode 1: Unlimited Custom Add (Default - Min ₹10, No Limit)
                     Box(
                         modifier = Modifier
-                            .weight(1f)
+                            .weight(1.1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (scannerMode == ScannerPaymentMode.PLAYERS_CHOICE) ElectricCyan else Color.Transparent)
+                            .clickable {
+                                scannerMode = ScannerPaymentMode.PLAYERS_CHOICE
+                            }
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                "💰 Unlimited Add (₹10+)",
+                                color = if (scannerMode == ScannerPaymentMode.PLAYERS_CHOICE) GamingDarkBackground else TextSecondary,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 12.sp
+                            )
+                            Text(
+                                "Min ₹10 • No Limit",
+                                color = if (scannerMode == ScannerPaymentMode.PLAYERS_CHOICE) GamingDarkBackground.copy(alpha = 0.85f) else TextTertiary,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+
+                    // Mode 2: Quick ₹10
+                    Box(
+                        modifier = Modifier
+                            .weight(0.9f)
                             .clip(RoundedCornerShape(10.dp))
                             .background(if (scannerMode == ScannerPaymentMode.ONLY_10_RUPEES) NeonFireOrange else Color.Transparent)
                             .clickable {
@@ -206,42 +236,14 @@ fun FamPayQrCard(
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                "⚡ Only Pay ₹10",
+                                "⚡ Quick ₹10",
                                 color = if (scannerMode == ScannerPaymentMode.ONLY_10_RUPEES) TextPrimary else TextSecondary,
                                 fontWeight = FontWeight.ExtraBold,
                                 fontSize = 12.sp
                             )
                             Text(
-                                "Fixed 10 Rs Scanner",
+                                "1-Tap Entry",
                                 color = if (scannerMode == ScannerPaymentMode.ONLY_10_RUPEES) NeonGold else TextTertiary,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
-
-                    // Mode 2: Player's Choice (Write Option)
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(if (scannerMode == ScannerPaymentMode.PLAYERS_CHOICE) ElectricCyan else Color.Transparent)
-                            .clickable {
-                                scannerMode = ScannerPaymentMode.PLAYERS_CHOICE
-                            }
-                            .padding(vertical = 10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                "✍️ Player's Choice",
-                                color = if (scannerMode == ScannerPaymentMode.PLAYERS_CHOICE) GamingDarkBackground else TextSecondary,
-                                fontWeight = FontWeight.ExtraBold,
-                                fontSize = 12.sp
-                            )
-                            Text(
-                                "Write Any Amount",
-                                color = if (scannerMode == ScannerPaymentMode.PLAYERS_CHOICE) GamingDarkBackground.copy(alpha = 0.8f) else TextTertiary,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -253,12 +255,12 @@ fun FamPayQrCard(
 
                 // Active Mode Banner
                 Surface(
-                    color = if (scannerMode == ScannerPaymentMode.ONLY_10_RUPEES) NeonFireOrange.copy(alpha = 0.15f) else ElectricCyan.copy(alpha = 0.15f),
+                    color = if (scannerMode == ScannerPaymentMode.PLAYERS_CHOICE) ElectricCyan.copy(alpha = 0.15f) else NeonFireOrange.copy(alpha = 0.15f),
                     shape = RoundedCornerShape(10.dp),
                     border = CardDefaults.outlinedCardBorder().copy(
                         brush = Brush.horizontalGradient(
-                            if (scannerMode == ScannerPaymentMode.ONLY_10_RUPEES) listOf(NeonFireOrange, NeonGold)
-                            else listOf(ElectricCyan, ElectricGreen)
+                            if (scannerMode == ScannerPaymentMode.PLAYERS_CHOICE) listOf(ElectricCyan, ElectricGreen)
+                            else listOf(NeonFireOrange, NeonGold)
                         )
                     ),
                     modifier = Modifier.fillMaxWidth()
@@ -269,17 +271,17 @@ fun FamPayQrCard(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(if (scannerMode == ScannerPaymentMode.ONLY_10_RUPEES) "🔒" else "✏️", fontSize = 16.sp)
+                            Text(if (scannerMode == ScannerPaymentMode.PLAYERS_CHOICE) "💎" else "⚡", fontSize = 16.sp)
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    if (scannerMode == ScannerPaymentMode.ONLY_10_RUPEES) "ONLY PAY 10 RUPEES SCANNER" else "PLAYER'S CHOICE CUSTOM AMOUNT",
-                                    color = if (scannerMode == ScannerPaymentMode.ONLY_10_RUPEES) NeonFireOrangeLight else ElectricCyan,
+                                    if (scannerMode == ScannerPaymentMode.PLAYERS_CHOICE) "UNLIMITED MONEY ADD (MIN ₹10)" else "QUICK ₹10 ENTRY DEPOSIT",
+                                    color = if (scannerMode == ScannerPaymentMode.PLAYERS_CHOICE) ElectricCyan else NeonFireOrangeLight,
                                     fontWeight = FontWeight.Black,
                                     fontSize = 12.sp
                                 )
                                 Text(
-                                    if (scannerMode == ScannerPaymentMode.ONLY_10_RUPEES) "Locked directly to ₹10 for instant match deposit" else "Write any amount to pay (Min ₹10)",
+                                    if (scannerMode == ScannerPaymentMode.PLAYERS_CHOICE) "Add more than 10 rupees • Unlimited money add in app" else "Quick 10 rupees instant payment",
                                     color = TextSecondary,
                                     fontSize = 10.sp
                                 )
@@ -540,33 +542,42 @@ fun FamPayQrCard(
                     fontSize = 16.sp
                 )
 
-                // IF PLAYER'S CHOICE: Show custom write amount option and quick chips
+                // IF PLAYER'S CHOICE: Show custom write amount option and quick chips (Unlimited Support)
                 if (scannerMode == ScannerPaymentMode.PLAYERS_CHOICE) {
                     Spacer(modifier = Modifier.height(10.dp))
-                    Text("Write Your Chosen Amount (₹):", color = TextSecondary, fontSize = 12.sp)
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // Quick Chips
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Select or Write Amount (₹):", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Text("Min ₹10 • Unlimited", color = NeonGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    // Horizontally scrollable quick amount chips
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         quickAmounts.forEach { amount ->
                             val isSelected = depositAmountText == amount.toString()
                             Surface(
                                 modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(10.dp))
                                     .clickable { depositAmountText = amount.toString() },
                                 color = if (isSelected) ElectricCyan else Color(0xFF1B1D2C),
-                                shape = RoundedCornerShape(8.dp)
+                                shape = RoundedCornerShape(10.dp),
+                                border = if (isSelected) CardDefaults.outlinedCardBorder().copy(brush = Brush.horizontalGradient(listOf(ElectricCyan, ElectricCyan))) else null
                             ) {
-                                Box(modifier = Modifier.padding(vertical = 6.dp), contentAlignment = Alignment.Center) {
+                                Box(modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
                                     Text(
                                         "₹$amount",
                                         color = if (isSelected) GamingDarkBackground else TextSecondary,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.ExtraBold
                                     )
                                 }
                             }
@@ -578,13 +589,25 @@ fun FamPayQrCard(
                     OutlinedTextField(
                         value = depositAmountText,
                         onValueChange = { depositAmountText = it.filter { ch -> ch.isDigit() } },
-                        label = { Text("Player's Choice Amount (₹) - Min ₹10") },
+                        label = { Text("Deposit Amount (₹) - Min ₹10, Unlimited") },
+                        placeholder = { Text("Enter any amount e.g. 50, 100, 500, 1000...") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("deposit_amount_input"),
                         leadingIcon = {
                             Text("₹", color = ElectricCyan, fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.padding(start = 12.dp))
+                        },
+                        trailingIcon = {
+                            if (depositAmountText.isNotBlank()) {
+                                Text(
+                                    "Unlimited",
+                                    color = ElectricGreen,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(end = 12.dp)
+                                )
+                            }
                         },
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -593,6 +616,13 @@ fun FamPayQrCard(
                             focusedTextColor = TextPrimary,
                             unfocusedTextColor = TextPrimary
                         )
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "⚡ Players can add more than 10 rupees with unlimited money add in app.",
+                        color = TextTertiary,
+                        fontSize = 11.sp
                     )
                 } else {
                     Spacer(modifier = Modifier.height(6.dp))
@@ -606,8 +636,13 @@ fun FamPayQrCard(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Payment Amount:", color = TextSecondary, fontSize = 13.sp)
-                            Text("₹10 (Fixed 10 Rs Scanner)", color = NeonGold, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
+                            Column {
+                                Text("Payment Mode:", color = TextSecondary, fontSize = 11.sp)
+                                Text("₹10 Quick Match Entry", color = NeonGold, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
+                            }
+                            TextButton(onClick = { scannerMode = ScannerPaymentMode.PLAYERS_CHOICE }) {
+                                Text("Switch to Unlimited Add", color = ElectricCyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
@@ -640,7 +675,7 @@ fun FamPayQrCard(
                     onClick = {
                         val amount = effectiveAmount
                         if (amount < 10) {
-                            Toast.makeText(context, "Amount must be at least ₹10 rupees!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Amount must be at least ₹10 rupees! Players can add unlimited money in app.", Toast.LENGTH_SHORT).show()
                             return@Button
                         }
                         if (utrText.trim().length < 8) {
@@ -661,7 +696,7 @@ fun FamPayQrCard(
                 ) {
                     Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Verify & Add ₹$effectiveAmount to Vault", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text("Verify & Add ₹$effectiveAmount to Vault (Unlimited)", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
             }
         }

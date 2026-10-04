@@ -185,8 +185,48 @@ fun WalletScreen(
                 }
             }
 
-            // Tab 0: Add Money (FamPay QR Integration)
+            // Tab 0: Add Money (FamPay QR Integration - Unlimited Support)
             if (activeWalletTab == 0) {
+                item {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = Color(0xFF131726),
+                        shape = RoundedCornerShape(16.dp),
+                        border = CardDefaults.outlinedCardBorder().copy(
+                            brush = Brush.horizontalGradient(listOf(ElectricCyan, NeonGold))
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(ElectricCyan.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("💎", fontSize = 20.sp)
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    "Add More Than ₹10 • Unlimited Money",
+                                    color = TextPrimary,
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 14.sp
+                                )
+                                Text(
+                                    "Any player can add ₹10 to unlimited money in app to play tournaments. 100% instant vault credit.",
+                                    color = TextSecondary,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                    }
+                }
+
                 item {
                     FamPayQrCard(
                         upiId = adminConfig.famPayUpiId,

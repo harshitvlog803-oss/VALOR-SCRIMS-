@@ -10,6 +10,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -62,8 +63,11 @@ fun FamPayTopUpDialog(
             if (entryFee != deficit && entryFee >= minTopUp) entryFee else null,
             20,
             50,
-            100
-        ).distinct().take(4)
+            100,
+            200,
+            500,
+            1000
+        ).distinct()
     }
 
     val selectedAmount = topUpAmountText.toIntOrNull() ?: deficit
@@ -158,25 +162,33 @@ fun FamPayTopUpDialog(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Quick Top Up Chips
-                Text("Select Top-Up Amount:", color = TextSecondary, fontSize = 12.sp, modifier = Modifier.align(Alignment.Start))
+                // Quick Top Up Chips (Unlimited Support)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Select Top-Up Amount:", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Min ₹10 • Unlimited", color = NeonGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     quickOptions.forEach { amount ->
                         val isSelected = selectedAmount == amount
                         Surface(
                             modifier = Modifier
-                                .weight(1f)
                                 .clip(RoundedCornerShape(10.dp))
                                 .clickable { topUpAmountText = amount.toString() },
                             color = if (isSelected) NeonFireOrange else Color(0xFF191B2C),
                             shape = RoundedCornerShape(10.dp)
                         ) {
-                            Box(modifier = Modifier.padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
+                            Box(modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
                                 Text(
                                     "₹$amount",
                                     color = if (isSelected) TextPrimary else TextSecondary,
@@ -190,13 +202,25 @@ fun FamPayTopUpDialog(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Amount Text Field (Player's Choice)
+                // Amount Text Field (Player's Choice - Min ₹10, Unlimited)
                 OutlinedTextField(
                     value = topUpAmountText,
                     onValueChange = { topUpAmountText = it.filter { ch -> ch.isDigit() } },
-                    label = { Text("Top-Up Amount (Min ₹10)") },
+                    label = { Text("Top-Up Amount (₹) - Min ₹10, Unlimited") },
+                    placeholder = { Text("Enter any amount e.g. 50, 100, 500, 1000...") },
                     leadingIcon = {
                         Text("₹", color = NeonGold, fontWeight = FontWeight.Black, fontSize = 18.sp, modifier = Modifier.padding(start = 12.dp))
+                    },
+                    trailingIcon = {
+                        if (topUpAmountText.isNotBlank()) {
+                            Text(
+                                "Unlimited",
+                                color = ElectricGreen,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(end = 12.dp)
+                            )
+                        }
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier
@@ -209,6 +233,14 @@ fun FamPayTopUpDialog(
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary
                     )
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    "⚡ Players can add more than 10 rupees with unlimited money add in app.",
+                    color = TextTertiary,
+                    fontSize = 11.sp,
+                    modifier = Modifier.align(Alignment.Start)
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -365,7 +397,7 @@ fun FamPayTopUpDialog(
                 Button(
                     onClick = {
                         if (selectedAmount < minTopUp) {
-                            Toast.makeText(context, "Minimum top-up is ₹$minTopUp", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Amount must be at least ₹$minTopUp rupees! Players can add unlimited money in app.", Toast.LENGTH_SHORT).show()
                             return@Button
                         }
                         if (utrInput.trim().length < 8) {

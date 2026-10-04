@@ -295,11 +295,11 @@ class TournamentRepository {
         return _bookings.value.find { it.tournamentId == tournamentId && it.playerUid == currentUid }
     }
 
-    // --- Wallet: Deposit via FamPay QR (Min >= 10 rupees) ---
+    // --- Wallet: Deposit via FamPay QR (Min >= 10 rupees, Unlimited Money) ---
     fun addDeposit(amount: Int, utrNumber: String): Result<Unit> {
         val minDep = _adminConfig.value.minDeposit
         if (amount < minDep) {
-            return Result.failure(IllegalArgumentException("Deposit must be at least ₹$minDep rupees!"))
+            return Result.failure(IllegalArgumentException("Deposit must be at least ₹$minDep rupees! You can add unlimited money."))
         }
         if (utrNumber.trim().length < 8) {
             return Result.failure(IllegalArgumentException("Please enter a valid 12-digit UTR / Ref Number from FamPay / UPI payment."))
