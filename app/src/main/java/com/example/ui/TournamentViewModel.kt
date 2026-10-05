@@ -41,6 +41,36 @@ class TournamentViewModel(
     private val _selectedModeFilter = MutableStateFlow<GameMode?>(null)
     val selectedModeFilter: StateFlow<GameMode?> = _selectedModeFilter.asStateFlow()
 
+    private val _isWhiteBackground = MutableStateFlow(false)
+    val isWhiteBackground: StateFlow<Boolean> = _isWhiteBackground.asStateFlow()
+
+    fun toggleAppTheme() {
+        _isWhiteBackground.value = !_isWhiteBackground.value
+        val mode = if (_isWhiteBackground.value) "White Theme" else "Dark Gaming Theme"
+        showToast("🎨 Switched to $mode")
+    }
+
+    fun setWhiteTheme(enabled: Boolean) {
+        _isWhiteBackground.value = enabled
+    }
+
+    fun quickGuestLogin(ign: String = "GAMER_${(1000..9999).random()}") {
+        val res = repository.signupPlayer(
+            ign = ign,
+            uid = "${(1000000000L..9999999999L).random()}",
+            phone = "98765${(10000..99999).random()}",
+            pass = "pass123"
+        )
+        if (res.isSuccess) {
+            showToast("⚡ Quick Login as ${repository.profile.value.ign}!")
+            navigateTo(Screen.Home)
+        } else {
+            repository.loginPlayer("ALPHA_PRO_99", "pass123")
+            showToast("⚡ Logged in successfully!")
+            navigateTo(Screen.Home)
+        }
+    }
+
     private val _toastEvent = MutableSharedFlow<String>()
     val toastEvent: SharedFlow<String> = _toastEvent.asSharedFlow()
 
@@ -56,6 +86,18 @@ class TournamentViewModel(
     ) { tournaments, filter ->
         if (filter == null) tournaments else tournaments.filter { it.gameMode == filter }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _activeWalletTab = MutableStateFlow(0)
+    val activeWalletTab: StateFlow<Int> = _activeWalletTab.asStateFlow()
+
+    fun setActiveWalletTab(tab: Int) {
+        _activeWalletTab.value = tab
+    }
+
+    fun navigateToWallet(tabIndex: Int = 0) {
+        _activeWalletTab.value = tabIndex
+        navigateTo(Screen.Wallet)
+    }
 
     fun navigateTo(screen: Screen) {
         _currentScreen.value = screen
@@ -149,13 +191,26 @@ class TournamentViewModel(
         }
     }
 
+    // --- Referral Redemption ---
+    fun redeemReferralCode(code: String, onComplete: (Boolean, String) -> Unit) {
+        val res = repository.redeemReferralCode(code)
+        if (res.isSuccess) {
+            showToast("🎁 Referral Code Applied! ₹15 added to your Vault!")
+            onComplete(true, "₹15 Bonus Added!")
+        } else {
+            val err = res.exceptionOrNull()?.message ?: "Invalid Referral Code"
+            showToast("❌ $err")
+            onComplete(false, err)
+        }
+    }
+
     // --- Admin Authentication & Controls ---
     fun loginOwner(role: OwnerRole, pin: String): Boolean {
         val success = repository.loginOwner(role, pin)
         if (success) {
-            showToast("🔓 Authenticated as ${if (role == OwnerRole.OWNER_1) "1st Owner (Super Admin)" else "2nd Owner (Payouts Manager)"}")
+            showToast("🔓 Authenticated as ${if (role == OwnerRole.OWNER_1) "1st Owner (App Developer)" else "2nd Owner (Tournament Manager)"}")
         } else {
-            showToast("❌ Invalid PIN entered!")
+            showToast(if (role == OwnerRole.OWNER_1) "❌ Access Denied: Only App Developer can log in to 1st Owner management!" else "❌ Incorrect 2nd Owner PIN code!")
         }
         return success
     }
@@ -179,7 +234,29 @@ class TournamentViewModel(
     fun updateFamPayUpi(newUpi: String): Boolean {
         val res = repository.updateFamPayUpi(newUpi)
         return if (res.isSuccess) {
-            showToast("✅ FamPay UPI ID updated to $newUpi")
+            showToast("✅ FamPay UPI ID & QR Code updated to $newUpi")
+            true
+        } else {
+            showToast("❌ ${res.exceptionOrNull()?.message}")
+            false
+        }
+    }
+
+    fun updateCustomRules(mode: GameMode, rules: List<String>): Boolean {
+        val res = repository.updateCustomTournamentRules(mode, rules)
+        return if (res.isSuccess) {
+            showToast("✅ Customized rules for ${mode.displayName} saved by 1st Owner!")
+            true
+        } else {
+            showToast("❌ ${res.exceptionOrNull()?.message}")
+            false
+        }
+    }
+
+    fun updateAppFeatures(support1: String, support2: String, minDep: Int, minWith: Int, referralReward: Int): Boolean {
+        val res = repository.updateAppFeatures(support1, support2, minDep, minWith, referralReward)
+        return if (res.isSuccess) {
+            showToast("✅ App features & limits customized by 1st Owner!")
             true
         } else {
             showToast("❌ ${res.exceptionOrNull()?.message}")

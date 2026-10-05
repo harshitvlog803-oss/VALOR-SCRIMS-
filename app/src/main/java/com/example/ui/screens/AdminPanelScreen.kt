@@ -5,9 +5,11 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -51,9 +53,10 @@ fun AdminPanelScreen(
     val tournaments by viewModel.filteredTournaments.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
 
-    // Login state
-    var selectedLoginRole by remember { mutableStateOf(OwnerRole.OWNER_1) }
+    // Login state - Default to Owner 2 (No player can access 1st Owner management)
+    var selectedLoginRole by remember { mutableStateOf(OwnerRole.OWNER_2) }
     var enteredPin by remember { mutableStateOf("") }
+    var showDeveloperAuth by remember { mutableStateOf(false) }
 
     // 1st Owner Pin Change state
     var oldPinInput by remember { mutableStateOf("") }
@@ -62,7 +65,7 @@ fun AdminPanelScreen(
     // 2nd Owner Configuration state (Managed by 1st Owner)
     var owner2NameInput by remember(adminConfig.owner2Name) { mutableStateOf(adminConfig.owner2Name) }
     var owner2PhoneInput by remember(adminConfig.owner2Phone) { mutableStateOf(adminConfig.owner2Phone) }
-    var owner2PinInput by remember(adminConfig.owner2Pin) { mutableStateOf(adminConfig.owner2Pin) }
+    var owner2PinInput by remember { mutableStateOf("") }
     var owner2EnabledState by remember(adminConfig.owner2Enabled) { mutableStateOf(adminConfig.owner2Enabled) }
 
     // FamPay QR Edit state (Only 1st Owner can change!)
@@ -140,7 +143,7 @@ fun AdminPanelScreen(
                                 fontSize = 16.sp
                             )
                             Text(
-                                "1st Owner: Full Control & QR Authority (PIN: 0105)\n2nd Owner: Tournament Payouts & Organizing",
+                                "1st Owner: App Developer & QR Customization\n2nd Owner: Tournament Management & Organising",
                                 color = TextSecondary,
                                 fontSize = 12.sp,
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -160,25 +163,11 @@ fun AdminPanelScreen(
                                     modifier = Modifier
                                         .weight(1f)
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(if (selectedLoginRole == OwnerRole.OWNER_1) NeonFireOrange else Color.Transparent)
-                                        .clickable { selectedLoginRole = OwnerRole.OWNER_1 }
-                                        .padding(vertical = 10.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        "1st Owner",
-                                        color = if (selectedLoginRole == OwnerRole.OWNER_1) TextPrimary else TextSecondary,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp
-                                    )
-                                }
-
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clip(RoundedCornerShape(10.dp))
                                         .background(if (selectedLoginRole == OwnerRole.OWNER_2) ElectricCyan else Color.Transparent)
-                                        .clickable { selectedLoginRole = OwnerRole.OWNER_2 }
+                                        .clickable {
+                                            selectedLoginRole = OwnerRole.OWNER_2
+                                            enteredPin = ""
+                                        }
                                         .padding(vertical = 10.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -189,29 +178,31 @@ fun AdminPanelScreen(
                                         fontSize = 13.sp
                                     )
                                 }
+
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(if (selectedLoginRole == OwnerRole.OWNER_1) NeonFireOrange else Color.Transparent)
+                                        .clickable {
+                                            selectedLoginRole = OwnerRole.OWNER_1
+                                            enteredPin = ""
+                                        }
+                                        .padding(vertical = 10.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        "App Developer",
+                                        color = if (selectedLoginRole == OwnerRole.OWNER_1) TextPrimary else TextSecondary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp
+                                    )
+                                }
                             }
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            if (selectedLoginRole == OwnerRole.OWNER_1) {
-                                Surface(
-                                    color = NeonFireOrange.copy(alpha = 0.15f),
-                                    shape = RoundedCornerShape(10.dp),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(12.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = NeonFireOrange, modifier = Modifier.size(20.dp))
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Column {
-                                            Text("1st Owner: No PIN Code Required", color = NeonFireOrange, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                            Text("Direct 1-tap Super Admin access to customize FamPay QR code, UPI ID & 2nd Owner.", color = TextSecondary, fontSize = 11.sp)
-                                        }
-                                    }
-                                }
-                            } else {
+                            if (selectedLoginRole == OwnerRole.OWNER_2) {
                                 OutlinedTextField(
                                     value = enteredPin,
                                     onValueChange = { enteredPin = it.filter { ch -> ch.isDigit() } },
@@ -230,14 +221,44 @@ fun AdminPanelScreen(
                                         unfocusedTextColor = TextPrimary
                                     )
                                 )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    "🔒 Enter private 2nd Owner PIN code to manage and organise tournaments.",
+                                    color = TextTertiary,
+                                    fontSize = 11.sp
+                                )
+                            } else {
+                                OutlinedTextField(
+                                    value = enteredPin,
+                                    onValueChange = { enteredPin = it },
+                                    label = { Text("App Developer Passcode") },
+                                    placeholder = { Text("••••") },
+                                    visualTransformation = PasswordVisualTransformation(),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("admin_dev_passcode_input"),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = NeonFireOrange,
+                                        unfocusedBorderColor = BorderDark,
+                                        focusedTextColor = TextPrimary,
+                                        unfocusedTextColor = TextPrimary
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    "🔒 Exclusive for App Developer only. Regular players cannot log in to 1st Owner management.",
+                                    color = TextTertiary,
+                                    fontSize = 11.sp
+                                )
                             }
 
                             Spacer(modifier = Modifier.height(16.dp))
 
                             Button(
                                 onClick = {
-                                    val pinToUse = if (selectedLoginRole == OwnerRole.OWNER_1) "" else enteredPin
-                                    val success = viewModel.loginOwner(selectedLoginRole, pinToUse)
+                                    val success = viewModel.loginOwner(selectedLoginRole, enteredPin)
                                     if (success) {
                                         enteredPin = ""
                                     }
@@ -246,16 +267,16 @@ fun AdminPanelScreen(
                                     .fillMaxWidth()
                                     .testTag("login_owner_button"),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (selectedLoginRole == OwnerRole.OWNER_1) NeonFireOrange else ElectricCyan,
-                                    contentColor = if (selectedLoginRole == OwnerRole.OWNER_1) TextPrimary else GamingDarkBackground
+                                    containerColor = if (selectedLoginRole == OwnerRole.OWNER_2) ElectricCyan else NeonFireOrange,
+                                    contentColor = if (selectedLoginRole == OwnerRole.OWNER_2) GamingDarkBackground else TextPrimary
                                 ),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Icon(Icons.Default.LockOpen, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    if (selectedLoginRole == OwnerRole.OWNER_1) "Enter as 1st Owner (No PIN Required)"
-                                    else "Unlock 2nd Owner Panel (Tournament Organiser)",
+                                    if (selectedLoginRole == OwnerRole.OWNER_2) "Unlock 2nd Owner Management"
+                                    else "Verify App Developer (1st Owner)",
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -338,10 +359,10 @@ fun AdminPanelScreen(
                                 }
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    "👑 1st Owner has NO PIN code (1-tap direct Super Admin access).\n" +
+                                    "👑 App Developer (1st Owner) Authority:\n" +
                                     "• Exclusively customize FamPay QR Code & UPI ID\n" +
                                     "• Choose & configure 2nd Owner credentials\n" +
-                                    "• 2nd Owner exclusively organizes tournaments & manages payouts",
+                                    "• Organise tournaments & manage payouts alongside 2nd Owner",
                                     color = TextSecondary,
                                     fontSize = 12.sp,
                                     lineHeight = 18.sp
@@ -406,7 +427,9 @@ fun AdminPanelScreen(
                                 OutlinedTextField(
                                     value = owner2PinInput,
                                     onValueChange = { owner2PinInput = it.filter { ch -> ch.isDigit() } },
-                                    label = { Text("2nd Owner Access PIN") },
+                                    label = { Text("Set 2nd Owner PIN") },
+                                    placeholder = { Text("••••") },
+                                    visualTransformation = PasswordVisualTransformation(),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                                     modifier = Modifier.fillMaxWidth(),
                                     colors = OutlinedTextFieldDefaults.colors(
@@ -549,8 +572,8 @@ fun AdminPanelScreen(
                     }
                 }
 
-                // 2ND OWNER ONLY: Organise Tournaments
-                if (activeRole == OwnerRole.OWNER_2) {
+                // 1ST & 2ND OWNER: Organise Tournaments (Both have option)
+                if (activeRole == OwnerRole.OWNER_1 || activeRole == OwnerRole.OWNER_2) {
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -565,14 +588,14 @@ fun AdminPanelScreen(
                                     Icon(Icons.Default.AddBox, contentDescription = null, tint = NeonFireOrange)
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        "Organise New Tournament (2nd Owner)",
+                                        "Organise New Tournament",
                                         color = TextPrimary,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 16.sp
                                     )
                                 }
                                 Text(
-                                    "Exclusive tournament organising controls for 2nd Owner (${adminConfig.owner2Name})",
+                                    "Tournament organising controls for 1st Owner (App Developer) & 2nd Owner",
                                     color = TextSecondary,
                                     fontSize = 12.sp
                                 )
@@ -596,23 +619,28 @@ fun AdminPanelScreen(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             // Mode Selector
-                            Text("Game Mode", color = TextSecondary, fontSize = 12.sp)
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text("Game Mode (Select match type)", color = TextSecondary, fontSize = 12.sp)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
                                 GameMode.values().forEach { mode ->
                                     val isSelected = newTournMode == mode
                                     Surface(
                                         modifier = Modifier
-                                            .weight(1f)
                                             .clip(RoundedCornerShape(8.dp))
                                             .clickable { newTournMode = mode },
                                         color = if (isSelected) NeonFireOrange else Color(0xFF151827),
                                         shape = RoundedCornerShape(8.dp)
                                     ) {
-                                        Box(modifier = Modifier.padding(vertical = 6.dp), contentAlignment = Alignment.Center) {
+                                        Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
                                             Text(
-                                                mode.displayName.split(" ").first(),
+                                                mode.displayName,
                                                 color = if (isSelected) TextPrimary else TextSecondary,
-                                                fontSize = 11.sp,
+                                                fontSize = 12.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
                                         }

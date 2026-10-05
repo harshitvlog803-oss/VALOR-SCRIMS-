@@ -5,8 +5,10 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -46,6 +48,7 @@ fun OrganiseTournamentScreen(
 
     val context = LocalContext.current
     val activeRole by viewModel.activeOwnerRole.collectAsState()
+    val isWhiteTheme by viewModel.isWhiteBackground.collectAsState()
 
     var tournTitle by remember { mutableStateOf("") }
     var selectedMode by remember { mutableStateOf(GameMode.SQUAD) }
@@ -58,10 +61,16 @@ fun OrganiseTournamentScreen(
     var secretRoomId by remember { mutableStateOf("") }
     var secretRoomPass by remember { mutableStateOf("") }
 
+    // 1st Owner Rules Customisation State
+    var customRulesList by remember(selectedMode) {
+        mutableStateOf(com.example.model.defaultRulesForMode(selectedMode).toMutableList())
+    }
+    var newRuleInput by remember { mutableStateOf("") }
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(GamingDarkBackground)
+            .background(appBackground(isWhiteTheme))
     ) {
         ClashXTopBar(
             title = "Organise Tournament",
@@ -75,8 +84,8 @@ fun OrganiseTournamentScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (activeRole != OwnerRole.OWNER_2) {
-                // Not 2nd Owner View
+            if (activeRole != OwnerRole.OWNER_1 && activeRole != OwnerRole.OWNER_2) {
+                // Not Authenticated as Owner View
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -93,14 +102,14 @@ fun OrganiseTournamentScreen(
                             Text("🛡️", fontSize = 48.sp)
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                "2nd Owner Tournament Organiser",
+                                "Owner Tournament Organiser",
                                 color = TextPrimary,
                                 fontWeight = FontWeight.Black,
                                 fontSize = 18.sp
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                "Only 2nd Owner can organise and publish tournaments to VALOR SCRIMS. 1st Owner is restricted from organizing tournaments and manages FamPay QR settings.\n\nPlease authenticate as 2nd Owner to continue.",
+                                "Tournament organizing is authorized for 1st Owner (App Developer) and 2nd Owner (Tournament Manager).\n\nPlease authenticate in Owner Panel to continue.",
                                 color = TextSecondary,
                                 fontSize = 13.sp,
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -111,13 +120,13 @@ fun OrganiseTournamentScreen(
                                 colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan, contentColor = GamingDarkBackground),
                                 shape = RoundedCornerShape(10.dp)
                             ) {
-                                Text("Login as 2nd Owner", fontWeight = FontWeight.Bold)
+                                Text("Login to Owner Panel", fontWeight = FontWeight.Bold)
                             }
                         }
                     }
                 }
             } else {
-                // 2nd Owner Organiser Portal
+                // Owner Organiser Portal
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -135,13 +144,13 @@ fun OrganiseTournamentScreen(
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
-                                    "2nd Owner Organiser Portal",
+                                    if (activeRole == OwnerRole.OWNER_1) "1st Owner (App Developer) Organiser" else "2nd Owner Organiser Portal",
                                     color = TextPrimary,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 15.sp
                                 )
                                 Text(
-                                    "🔒 Authorised: 2nd Owner can configure matches, entry fees & secret room ID",
+                                    "🔒 Authorised: Configure matches, entry fees & secret room ID",
                                     color = ElectricCyan,
                                     fontSize = 11.sp
                                 )
@@ -181,24 +190,28 @@ fun OrganiseTournamentScreen(
                         Spacer(modifier = Modifier.height(14.dp))
 
                         // Game Mode Selector
-                        Text("Game Mode", color = TextSecondary, fontSize = 12.sp)
+                        Text("Game Mode (Select match type)", color = TextSecondary, fontSize = 12.sp)
                         Spacer(modifier = Modifier.height(6.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             GameMode.values().forEach { mode ->
                                 val isSelected = selectedMode == mode
                                 Surface(
                                     modifier = Modifier
-                                        .weight(1f)
                                         .clip(RoundedCornerShape(8.dp))
                                         .clickable { selectedMode = mode },
                                     color = if (isSelected) NeonFireOrange else Color(0xFF151827),
                                     shape = RoundedCornerShape(8.dp)
                                 ) {
-                                    Box(modifier = Modifier.padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
+                                    Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
                                         Text(
-                                            mode.displayName.split(" ").first(),
+                                            mode.displayName,
                                             color = if (isSelected) TextPrimary else TextSecondary,
-                                            fontSize = 11.sp,
+                                            fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold
                                         )
                                     }
@@ -373,6 +386,159 @@ fun OrganiseTournamentScreen(
                             )
                         }
 
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // RULES SECTION: 1st Owner can CUSTOMISE rules freely! 2nd Owner has read-only esports presets.
+                        if (activeRole == OwnerRole.OWNER_1) {
+                            // 👑 1st Owner: App Customiser Rule Editor
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                color = Color(0xFF1B1428),
+                                shape = RoundedCornerShape(14.dp),
+                                border = CardDefaults.outlinedCardBorder().copy(
+                                    brush = Brush.horizontalGradient(listOf(NeonFireOrange, NeonGold))
+                                )
+                            ) {
+                                Column(modifier = Modifier.padding(14.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text("👑", fontSize = 18.sp)
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Column {
+                                                Text(
+                                                    "Customised Tournament Rules (1st Owner)",
+                                                    color = NeonGold,
+                                                    fontWeight = FontWeight.Black,
+                                                    fontSize = 13.sp
+                                                )
+                                                Text(
+                                                    "App Customiser: Add, edit & remove rules for this match",
+                                                    color = TextSecondary,
+                                                    fontSize = 11.sp
+                                                )
+                                            }
+                                        }
+                                        TextButton(
+                                            onClick = {
+                                                customRulesList = com.example.model.defaultRulesForMode(selectedMode).toMutableList()
+                                            }
+                                        ) {
+                                            Text("Reset", color = ElectricCyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    // Add New Custom Rule Input
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        OutlinedTextField(
+                                            value = newRuleInput,
+                                            onValueChange = { newRuleInput = it },
+                                            placeholder = { Text("e.g. Special M1887 duel / No Gloo Wall break") },
+                                            label = { Text("Add Custom Rule") },
+                                            modifier = Modifier.weight(1f),
+                                            shape = RoundedCornerShape(10.dp),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedBorderColor = NeonGold,
+                                                unfocusedBorderColor = BorderDark,
+                                                focusedTextColor = TextPrimary,
+                                                unfocusedTextColor = TextPrimary
+                                            )
+                                        )
+                                        Button(
+                                            onClick = {
+                                                if (newRuleInput.isNotBlank()) {
+                                                    customRulesList = (customRulesList + newRuleInput.trim()).toMutableList()
+                                                    newRuleInput = ""
+                                                }
+                                            },
+                                            colors = ButtonDefaults.buttonColors(containerColor = NeonGold, contentColor = GamingDarkBackground),
+                                            shape = RoundedCornerShape(10.dp)
+                                        ) {
+                                            Text("Add", fontWeight = FontWeight.Black)
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    Text("Match Rules (${customRulesList.size}):", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                    Spacer(modifier = Modifier.height(6.dp))
+
+                                    customRulesList.forEachIndexed { idx, rule ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 3.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(Color(0xFF131524))
+                                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.Top) {
+                                                Text("${idx + 1}. ", color = NeonFireOrange, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                                Text(rule, color = TextSecondary, fontSize = 11.sp, lineHeight = 16.sp)
+                                            }
+                                            IconButton(
+                                                onClick = {
+                                                    customRulesList = customRulesList.filterIndexed { i, _ -> i != idx }.toMutableList()
+                                                },
+                                                modifier = Modifier.size(24.dp)
+                                            ) {
+                                                Icon(Icons.Default.Close, contentDescription = "Delete", tint = DangerRed, modifier = Modifier.size(16.dp))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            // 🛡️ 2nd Owner: Standard Rules Preview (Read-only)
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                color = Color(0xFF131524),
+                                shape = RoundedCornerShape(12.dp),
+                                border = CardDefaults.outlinedCardBorder().copy(
+                                    brush = Brush.horizontalGradient(listOf(ElectricCyan.copy(alpha = 0.5f), BorderDark))
+                                )
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("📜", fontSize = 16.sp)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Column {
+                                            Text(
+                                                "Rules Applied to this Tournament (${selectedMode.displayName})",
+                                                color = NeonGold,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 12.sp
+                                            )
+                                            Text(
+                                                "🔒 Rule Customisation is exclusively for 1st Owner (App Customiser)",
+                                                color = ElectricCyan,
+                                                fontSize = 10.sp
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    val previewRules = com.example.model.defaultRulesForMode(selectedMode)
+                                    previewRules.take(4).forEach { rule ->
+                                        Text("• $rule", color = TextSecondary, fontSize = 11.sp, lineHeight = 15.sp, modifier = Modifier.padding(vertical = 2.dp))
+                                    }
+                                    if (previewRules.size > 4) {
+                                        Text("+ ${previewRules.size - 4} more esports fair play rules included automatically.", color = ElectricCyan, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+                                    }
+                                }
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(20.dp))
 
                         Button(
@@ -385,6 +551,8 @@ fun OrganiseTournamentScreen(
                                 val prize = prizePool.toIntOrNull() ?: 500
                                 val kill = perKill.toIntOrNull() ?: 10
                                 val slots = totalSlots.toIntOrNull() ?: 48
+
+                                val finalRules = if (activeRole == OwnerRole.OWNER_1) customRulesList.toList() else com.example.model.defaultRulesForMode(selectedMode)
 
                                 val newTournament = Tournament(
                                     id = "cx-${System.currentTimeMillis()}",
@@ -400,6 +568,7 @@ fun OrganiseTournamentScreen(
                                     status = TournamentStatus.OPEN,
                                     roomId = secretRoomId.trim(),
                                     roomPassword = secretRoomPass.trim(),
+                                    rules = finalRules,
                                     bookedPlayers = emptyList()
                                 )
 

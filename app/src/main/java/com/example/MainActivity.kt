@@ -30,8 +30,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MyApplicationTheme {
-                ValorScrimsApp()
+            val viewModel: TournamentViewModel = viewModel()
+            val isWhiteTheme by viewModel.isWhiteBackground.collectAsState()
+            MyApplicationTheme(isWhiteTheme = isWhiteTheme) {
+                ValorScrimsApp(viewModel = viewModel)
             }
         }
     }
@@ -43,6 +45,7 @@ fun ValorScrimsApp(
 ) {
     val context = LocalContext.current
     val currentScreen by viewModel.currentScreen.collectAsState()
+    val isWhiteTheme by viewModel.isWhiteBackground.collectAsState()
 
     // Listen to toast events
     LaunchedEffect(Unit) {
@@ -68,13 +71,13 @@ fun ValorScrimsApp(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = GamingDarkBackground,
+        containerColor = appBackground(isWhiteTheme),
         contentWindowInsets = WindowInsets.safeDrawing,
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar(
-                    containerColor = Color(0xFF10121D),
-                    contentColor = TextPrimary,
+                    containerColor = if (isWhiteTheme) GamingWhiteCard else Color(0xFF10121D),
+                    contentColor = if (isWhiteTheme) TextPrimaryDark else TextPrimary,
                     tonalElevation = 8.dp,
                     windowInsets = WindowInsets.navigationBars
                 ) {

@@ -5,6 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -39,6 +41,73 @@ fun TournamentCard(
 ) {
     val progress = (tournament.bookedSlots.toFloat() / tournament.maxSlots.toFloat()).coerceIn(0f, 1f)
     val isFull = tournament.bookedSlots >= tournament.maxSlots
+    var showRulesDialog by remember { mutableStateOf(false) }
+
+    if (showRulesDialog) {
+        AlertDialog(
+            onDismissRequest = { showRulesDialog = false },
+            containerColor = GamingCard,
+            shape = RoundedCornerShape(20.dp),
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("📜", fontSize = 20.sp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            "Tournament Rules",
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 17.sp
+                        )
+                        Text(
+                            "${tournament.gameMode.displayName} • ${tournament.mapType.displayName}",
+                            color = NeonFireOrange,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            },
+            text = {
+                Box(modifier = Modifier.heightIn(max = 380.dp)) {
+                    androidx.compose.foundation.lazy.LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        item {
+                            Surface(
+                                color = NeonFireOrange.copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    "⚡ Please read all tournament regulations before entering the custom room!",
+                                    color = NeonFireOrange,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.padding(10.dp)
+                                )
+                            }
+                        }
+                        items(tournament.rules) { rule ->
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                Text("• ", color = NeonGold, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text(rule, color = TextSecondary, fontSize = 12.sp, lineHeight = 17.sp)
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showRulesDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = NeonFireOrange, contentColor = TextPrimary),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Got It", fontWeight = FontWeight.Bold)
+                }
+            }
+        )
+    }
 
     Card(
         modifier = modifier
@@ -68,8 +137,11 @@ fun TournamentCard(
                     // Game Mode Badge
                     Surface(
                         color = when (tournament.gameMode) {
-                            GameMode.CLASH_SQUAD -> NeonFireOrange.copy(alpha = 0.2f)
-                            GameMode.SQUAD -> ElectricCyan.copy(alpha = 0.2f)
+                            GameMode.LONE_WOLF_1V1_BODY, GameMode.LONE_WOLF_1V1_HEAD -> NeonFireOrange.copy(alpha = 0.2f)
+                            GameMode.CS_1V1_HEAD_UNLIMITED, GameMode.CS_2V2_BODY, GameMode.CS_1V1_BODY, GameMode.CLASH_SQUAD -> ElectricCyan.copy(alpha = 0.2f)
+                            GameMode.SOLO_PER_KILL, GameMode.DUO_PER_KILL -> DangerRed.copy(alpha = 0.2f)
+                            GameMode.LONE_WOLF_LOSS_TO_WIN -> NeonGold.copy(alpha = 0.2f)
+                            GameMode.SQUAD -> ElectricGreen.copy(alpha = 0.2f)
                             GameMode.DUO -> NeonGold.copy(alpha = 0.2f)
                             GameMode.SOLO -> Color(0xFF7E57C2).copy(alpha = 0.2f)
                         },
@@ -78,8 +150,11 @@ fun TournamentCard(
                         Text(
                             text = tournament.gameMode.displayName,
                             color = when (tournament.gameMode) {
-                                GameMode.CLASH_SQUAD -> NeonFireOrange
-                                GameMode.SQUAD -> ElectricCyan
+                                GameMode.LONE_WOLF_1V1_BODY, GameMode.LONE_WOLF_1V1_HEAD -> NeonFireOrange
+                                GameMode.CS_1V1_HEAD_UNLIMITED, GameMode.CS_2V2_BODY, GameMode.CS_1V1_BODY, GameMode.CLASH_SQUAD -> ElectricCyan
+                                GameMode.SOLO_PER_KILL, GameMode.DUO_PER_KILL -> DangerRed
+                                GameMode.LONE_WOLF_LOSS_TO_WIN -> NeonGold
+                                GameMode.SQUAD -> ElectricGreen
                                 GameMode.DUO -> NeonGold
                                 GameMode.SOLO -> Color(0xFFB388FF)
                             },
@@ -103,6 +178,24 @@ fun TournamentCard(
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
+                    }
+
+                    Spacer(modifier = Modifier.width(6.dp))
+
+                    // Rules Quick Button
+                    Surface(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { showRulesDialog = true },
+                        color = Color(0xFF281F38),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("📜 Rules", color = NeonGold, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
 

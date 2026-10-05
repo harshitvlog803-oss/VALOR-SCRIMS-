@@ -12,8 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.GamingDarkBackground
-import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.*
 
 @Composable
 fun ClashXTopBar(
@@ -22,11 +21,15 @@ fun ClashXTopBar(
     actions: @Composable (RowScope.() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    val isWhite = LocalIsWhiteTheme.current
+    val barBg = appBackground(isWhite)
+    val textClr = appTextPrimary(isWhite)
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp)
-            .background(GamingDarkBackground)
+            .background(barBg)
             .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -35,7 +38,7 @@ fun ClashXTopBar(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = TextPrimary
+                    tint = textClr
                 )
             }
         } else {
@@ -44,7 +47,7 @@ fun ClashXTopBar(
 
         Text(
             text = title,
-            color = TextPrimary,
+            color = textClr,
             fontWeight = FontWeight.Bold,
             fontSize = 17.sp,
             modifier = Modifier.weight(1f)

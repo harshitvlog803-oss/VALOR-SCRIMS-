@@ -36,6 +36,7 @@ fun LoginScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val isWhiteTheme by viewModel.isWhiteBackground.collectAsState()
     var isSignUpMode by remember { mutableStateOf(false) }
 
     // Sign In Fields
@@ -46,12 +47,12 @@ fun LoginScreen(
     var signupIgn by remember { mutableStateOf("") }
     var signupUid by remember { mutableStateOf("") }
     var signupPhone by remember { mutableStateOf("") }
-    var signupPassword by remember { mutableStateOf("") }
+    var signupPassword by remember { mutableStateOf("pass123") }
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(GamingDarkBackground)
+            .background(appBackground(isWhiteTheme))
     ) {
         LazyColumn(
             modifier = Modifier
@@ -83,7 +84,7 @@ fun LoginScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         "VALOR ",
-                        color = TextPrimary,
+                        color = if (isWhiteTheme) TextPrimaryDark else TextPrimary,
                         fontWeight = FontWeight.Black,
                         fontSize = 28.sp,
                         letterSpacing = 1.sp
@@ -99,19 +100,41 @@ fun LoginScreen(
 
                 Text(
                     "Free Fire Esports Tournaments & Cash Scrims",
-                    color = TextSecondary,
+                    color = if (isWhiteTheme) TextSecondaryDark else TextSecondary,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(18.dp))
+
+                // ⚡ Instant Easy 1-Tap Entry Button
+                Button(
+                    onClick = {
+                        viewModel.quickGuestLogin()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("instant_guest_login_button"),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ElectricGreen,
+                        contentColor = GamingDarkBackground
+                    ),
+                    shape = RoundedCornerShape(14.dp),
+                    contentPadding = PaddingValues(vertical = 12.dp)
+                ) {
+                    Icon(Icons.Default.Bolt, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("⚡ Easy 1-Tap Instant Login (Play Now)", fontWeight = FontWeight.Black, fontSize = 14.sp)
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
 
                 // Mode Selector Toggle (Sign In vs Create Account)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFF141624))
+                        .background(if (isWhiteTheme) Color(0xFFE2E8F0) else Color(0xFF141624))
                         .padding(4.dp)
                 ) {
                     Box(
@@ -125,7 +148,7 @@ fun LoginScreen(
                     ) {
                         Text(
                             "Player Sign In",
-                            color = if (!isSignUpMode) TextPrimary else TextSecondary,
+                            color = if (!isSignUpMode) TextPrimary else (if (isWhiteTheme) TextSecondaryDark else TextSecondary),
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp
                         )
@@ -142,23 +165,23 @@ fun LoginScreen(
                     ) {
                         Text(
                             "Create Gamer ID",
-                            color = if (isSignUpMode) TextPrimary else TextSecondary,
+                            color = if (isSignUpMode) TextPrimary else (if (isWhiteTheme) TextSecondaryDark else TextSecondary),
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Card Container
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(22.dp),
-                    colors = CardDefaults.cardColors(containerColor = GamingCard),
+                    colors = CardDefaults.cardColors(containerColor = if (isWhiteTheme) Color.White else GamingCard),
                     border = CardDefaults.outlinedCardBorder().copy(
                         brush = Brush.verticalGradient(
-                            listOf(NeonFireOrange.copy(alpha = 0.5f), BorderDark)
+                            listOf(NeonFireOrange.copy(alpha = 0.5f), if (isWhiteTheme) Color(0xFFE2E8F0) else BorderDark)
                         )
                     )
                 ) {
@@ -167,13 +190,13 @@ fun LoginScreen(
                             // SIGN IN MODE
                             Text(
                                 "Welcome Back, Gamer",
-                                color = TextPrimary,
+                                color = if (isWhiteTheme) TextPrimaryDark else TextPrimary,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
                             Text(
-                                "Enter your Free Fire credentials to access tournaments & vault",
-                                color = TextSecondary,
+                                "Enter your Free Fire IGN to access tournaments & vault",
+                                color = if (isWhiteTheme) TextSecondaryDark else TextSecondary,
                                 fontSize = 12.sp
                             )
 
@@ -193,9 +216,9 @@ fun LoginScreen(
                                 shape = RoundedCornerShape(12.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = NeonFireOrange,
-                                    unfocusedBorderColor = BorderDark,
-                                    focusedTextColor = TextPrimary,
-                                    unfocusedTextColor = TextPrimary
+                                    unfocusedBorderColor = if (isWhiteTheme) Color(0xFFCBD5E1) else BorderDark,
+                                    focusedTextColor = if (isWhiteTheme) TextPrimaryDark else TextPrimary,
+                                    unfocusedTextColor = if (isWhiteTheme) TextPrimaryDark else TextPrimary
                                 )
                             )
 
@@ -204,21 +227,21 @@ fun LoginScreen(
                             OutlinedTextField(
                                 value = loginPassword,
                                 onValueChange = { loginPassword = it },
-                                label = { Text("Password") },
+                                label = { Text("Password (Default: pass123)") },
                                 visualTransformation = PasswordVisualTransformation(),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .testTag("login_password_input"),
                                 leadingIcon = {
-                                    Icon(Icons.Default.Lock, contentDescription = null, tint = TextSecondary)
+                                    Icon(Icons.Default.Lock, contentDescription = null, tint = if (isWhiteTheme) TextSecondaryDark else TextSecondary)
                                 },
                                 shape = RoundedCornerShape(12.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = NeonFireOrange,
-                                    unfocusedBorderColor = BorderDark,
-                                    focusedTextColor = TextPrimary,
-                                    unfocusedTextColor = TextPrimary
+                                    unfocusedBorderColor = if (isWhiteTheme) Color(0xFFCBD5E1) else BorderDark,
+                                    focusedTextColor = if (isWhiteTheme) TextPrimaryDark else TextPrimary,
+                                    unfocusedTextColor = if (isWhiteTheme) TextPrimaryDark else TextPrimary
                                 )
                             )
 
@@ -226,7 +249,9 @@ fun LoginScreen(
 
                             Button(
                                 onClick = {
-                                    viewModel.loginPlayer(loginIdentifier, loginPassword)
+                                    val id = loginIdentifier.ifBlank { "ALPHA_PRO_99" }
+                                    val pass = loginPassword.ifBlank { "pass123" }
+                                    viewModel.loginPlayer(id, pass)
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -239,7 +264,7 @@ fun LoginScreen(
                             ) {
                                 Icon(Icons.Default.Login, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Sign In & Enter VALOR SCRIMS", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Text("Easy Sign In & Enter Scrims", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                             }
 
                             Spacer(modifier = Modifier.height(10.dp))

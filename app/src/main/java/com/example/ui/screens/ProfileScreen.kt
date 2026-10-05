@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -44,6 +45,7 @@ fun ProfileScreen(
 
     val context = LocalContext.current
     val profile by viewModel.profile.collectAsState()
+    val isWhiteTheme by viewModel.isWhiteBackground.collectAsState()
 
     var editIgn by remember(profile.ign) { mutableStateOf(profile.ign) }
     var editUid by remember(profile.uid) { mutableStateOf(profile.uid) }
@@ -52,7 +54,7 @@ fun ProfileScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(GamingDarkBackground)
+            .background(appBackground(isWhiteTheme))
     ) {
         ClashXTopBar(
             title = "Gamer Profile & Badges",
@@ -169,6 +171,83 @@ fun ProfileScreen(
                                 Text("Sign Out", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
+                    }
+                }
+            }
+
+            // App Background White / Dark Theme Card
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = if (isWhiteTheme) Color.White else GamingCard),
+                    border = CardDefaults.outlinedCardBorder().copy(
+                        brush = Brush.horizontalGradient(listOf(NeonFireOrange.copy(alpha = 0.3f), NeonGold.copy(alpha = 0.3f)))
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(if (isWhiteTheme) "☀️" else "🌙", fontSize = 24.sp)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    "App Background: White Theme",
+                                    color = if (isWhiteTheme) TextPrimaryDark else TextPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                                Text(
+                                    if (isWhiteTheme) "Clean bright white background active" else "Dark esports gaming background active",
+                                    color = if (isWhiteTheme) TextSecondaryDark else TextSecondary,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                        Switch(
+                            checked = isWhiteTheme,
+                            onCheckedChange = { viewModel.toggleAppTheme() },
+                            colors = SwitchDefaults.colors(checkedThumbColor = NeonFireOrange, checkedTrackColor = NeonFireOrange.copy(alpha = 0.4f))
+                        )
+                    }
+                }
+            }
+
+            // Owner / Management Access Card
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(18.dp))
+                        .clickable { viewModel.navigateTo(Screen.Admin) },
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = if (isWhiteTheme) Color(0xFFF8FAFC) else Color(0xFF141724))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Security, contentDescription = null, tint = ElectricCyan, modifier = Modifier.size(24.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Owner / Management Portal",
+                                color = if (isWhiteTheme) TextPrimaryDark else TextPrimary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
+                            Text(
+                                "2nd Owner & App Developer secure login",
+                                color = if (isWhiteTheme) TextSecondaryDark else TextSecondary,
+                                fontSize = 11.sp
+                            )
+                        }
+                        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = TextSecondary)
                     }
                 }
             }

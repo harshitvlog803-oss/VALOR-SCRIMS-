@@ -23,7 +23,7 @@ class TournamentLogicTest {
     @Test
     fun testInitialAdminConfigAndPins() {
         val config = repository.adminConfig.value
-        assertFalse("Owner 1 requires NO PIN", config.owner1RequiresPin)
+        assertEquals("0105", config.owner1DeveloperCode)
         assertEquals("0105", config.owner2Pin)
         assertEquals("9813700369@fam", config.famPayUpiId)
         assertEquals("9813700369", config.supportNumber1)
@@ -34,9 +34,13 @@ class TournamentLogicTest {
     }
 
     @Test
-    fun testOwner1NoPinAndOwner2Pin0105() {
-        // 1st Owner requires NO PIN: 1-tap direct login
-        assertTrue(repository.loginOwner(OwnerRole.OWNER_1, ""))
+    fun testOwner1DeveloperAuthAndOwner2Pin() {
+        // Regular players entering empty/wrong pass cannot login to 1st Owner
+        assertFalse(repository.loginOwner(OwnerRole.OWNER_1, ""))
+        assertFalse(repository.loginOwner(OwnerRole.OWNER_1, "random_player"))
+
+        // App Developer logs in with developer verification
+        assertTrue(repository.loginOwner(OwnerRole.OWNER_1, "dev"))
         assertEquals(OwnerRole.OWNER_1, repository.activeOwnerRole.value)
 
         repository.logoutOwner()
@@ -50,7 +54,7 @@ class TournamentLogicTest {
     @Test
     fun testOwner1Chooses2ndOwner() {
         // Owner 1 configures 2nd Owner
-        assertTrue(repository.loginOwner(OwnerRole.OWNER_1, ""))
+        assertTrue(repository.loginOwner(OwnerRole.OWNER_1, "dev"))
         val update2nd = repository.updateOwner2Credentials("Harshit Manager", "7207080543", "0105", true)
         assertTrue(update2nd.isSuccess)
 
@@ -73,14 +77,14 @@ class TournamentLogicTest {
 
         // 1st Owner changes FamPay QR -> Must SUCCEED
         repository.logoutOwner()
-        assertTrue(repository.loginOwner(OwnerRole.OWNER_1, ""))
+        assertTrue(repository.loginOwner(OwnerRole.OWNER_1, "dev"))
         val successRes = repository.updateFamPayUpi("9813700369@fam")
         assertTrue(successRes.isSuccess)
         assertEquals("9813700369@fam", repository.adminConfig.value.famPayUpiId)
     }
 
     @Test
-    fun testOnlyOwner2CanOrganiseTournaments() {
+    fun testBothOwner1AndOwner2CanOrganiseTournaments() {
         val t1 = Tournament(
             id = "test-1",
             title = "Squad Showdown",
@@ -97,16 +101,18 @@ class TournamentLogicTest {
             roomPassword = "pass"
         )
 
-        // 1st Owner CANNOT organise tournaments ("don't show owner 1 organise")
+        // 1st Owner has access to organise tournaments
         repository.logoutOwner()
-        assertTrue(repository.loginOwner(OwnerRole.OWNER_1, ""))
-        val failOwner1 = repository.createTournament(t1)
-        assertTrue("Owner 1 cannot organise tournaments", failOwner1.isFailure)
+        assertTrue(repository.loginOwner(OwnerRole.OWNER_1, "dev"))
+        val successOwner1 = repository.createTournament(t1)
+        assertTrue("Owner 1 can organise tournaments", successOwner1.isSuccess)
 
-        // 2nd Owner CAN organise tournaments ("Only see owner 2 login and organise tournament")
+        val t2 = t1.copy(id = "test-2", title = "CS 1v1 Head Battle", gameMode = GameMode.CS_1V1_HEAD_UNLIMITED)
+
+        // 2nd Owner also has option to organise tournaments
         repository.logoutOwner()
         assertTrue(repository.loginOwner(OwnerRole.OWNER_2, "0105"))
-        val successOwner2 = repository.createTournament(t1)
+        val successOwner2 = repository.createTournament(t2)
         assertTrue("Owner 2 can organise tournaments", successOwner2.isSuccess)
     }
 

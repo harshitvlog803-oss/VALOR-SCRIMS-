@@ -52,6 +52,7 @@ fun HomeScreen(
     val selectedFilter by viewModel.selectedModeFilter.collectAsState()
     val activeRole by viewModel.activeOwnerRole.collectAsState()
     val adminConfig by viewModel.adminConfig.collectAsState()
+    val isWhiteTheme by viewModel.isWhiteBackground.collectAsState()
 
     var bookingDialogTournament by remember { mutableStateOf<Tournament?>(null) }
     var topUpDialogTournament by remember { mutableStateOf<Tournament?>(null) }
@@ -62,6 +63,8 @@ fun HomeScreen(
 
     var showOnlyMyBooked by remember { mutableStateOf(false) }
     var showAllBookedPlayersDialog by remember { mutableStateOf(false) }
+    var showAllTournamentRulesDialog by remember { mutableStateOf(false) }
+    var rulesSelectedMode by remember { mutableStateOf(GameMode.LONE_WOLF_1V1_BODY) }
     var showOrganiseAuthDialog by remember { mutableStateOf(false) }
     var authSelectedRole by remember { mutableStateOf(OwnerRole.OWNER_1) }
     var authPinInput by remember { mutableStateOf("") }
@@ -79,7 +82,7 @@ fun HomeScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(GamingDarkBackground)
+            .background(appBackground(isWhiteTheme))
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -163,7 +166,7 @@ fun HomeScreen(
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 "₹${profile.vaultBalance}",
-                                color = TextPrimary,
+                                color = if (isWhiteTheme) TextPrimaryDark else TextPrimary,
                                 fontWeight = FontWeight.ExtraBold,
                                 fontSize = 13.sp
                             )
@@ -179,21 +182,16 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    // Owner / Admin Portal Button
+                    // App Background White / Dark Theme Toggle
                     IconButton(
-                        onClick = { viewModel.navigateTo(Screen.Admin) },
+                        onClick = { viewModel.toggleAppTheme() },
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(36.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF1E2132))
-                            .testTag("admin_button")
+                            .background(if (isWhiteTheme) Color(0xFFE2E8F0) else Color(0xFF1E2132))
+                            .testTag("theme_toggle_button")
                     ) {
-                        Icon(
-                            Icons.Default.AdminPanelSettings,
-                            contentDescription = "Owner Panel",
-                            tint = NeonFireOrangeLight,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        Text(if (isWhiteTheme) "🌙" else "⚪", fontSize = 16.sp)
                     }
                 }
             }
@@ -284,6 +282,14 @@ fun HomeScreen(
         item {
             val filters = listOf(
                 null to "All Modes",
+                GameMode.LONE_WOLF_1V1_BODY to "🐺 LW 1v1 Body",
+                GameMode.LONE_WOLF_1V1_HEAD to "🎯 LW 1v1 Head",
+                GameMode.CS_1V1_HEAD_UNLIMITED to "💥 CS 1v1 Head",
+                GameMode.CS_2V2_BODY to "⚔️ CS 2v2 Body",
+                GameMode.CS_1V1_BODY to "🛡️ CS 1v1 Body",
+                GameMode.SOLO_PER_KILL to "☠️ Solo Per Kill",
+                GameMode.DUO_PER_KILL to "👥 Duo Per Kill",
+                GameMode.LONE_WOLF_LOSS_TO_WIN to "🔄 LW Loss to Win",
                 GameMode.SOLO to "Solo",
                 GameMode.DUO to "Duo",
                 GameMode.SQUAD to "Squad (4v4)",
@@ -364,6 +370,88 @@ fun HomeScreen(
                             fontSize = 12.sp,
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                         )
+                    }
+                }
+            }
+        }
+
+        // Vault Referral & All Tournament Rules Quick Row
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // Vault Referral Button
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(14.dp))
+                        .clickable { viewModel.navigateToWallet(2) }
+                        .testTag("vault_referral_shortcut_button"),
+                    color = if (isWhiteTheme) Color(0xFFFAF5FF) else Color(0xFF22152F),
+                    border = CardDefaults.outlinedCardBorder().copy(
+                        brush = Brush.horizontalGradient(listOf(Color(0xFFAB47BC), NeonGold))
+                    ),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("🎁", fontSize = 20.sp)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                "Vault Referral",
+                                color = if (isWhiteTheme) TextPrimaryDark else TextPrimary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                            Text(
+                                "Free ₹15 Cash",
+                                color = NeonGold,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+                }
+
+                // All Tournament Rules Button
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(14.dp))
+                        .clickable { showAllTournamentRulesDialog = true }
+                        .testTag("all_tournament_rules_button"),
+                    color = if (isWhiteTheme) Color(0xFFEFF6FF) else Color(0xFF141A2D),
+                    border = CardDefaults.outlinedCardBorder().copy(
+                        brush = Brush.horizontalGradient(listOf(ElectricCyan, NeonFireOrange))
+                    ),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("📜", fontSize = 20.sp)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                "Tournament Rules",
+                                color = if (isWhiteTheme) TextPrimaryDark else TextPrimary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                            Text(
+                                "All Modes & Guide",
+                                color = ElectricCyan,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 11.sp
+                            )
+                        }
                     }
                 }
             }
@@ -898,6 +986,144 @@ fun HomeScreen(
                 }
             },
             containerColor = GamingCardElevated
+        )
+    }
+
+    // --- All Tournament Rules & Fair Play Modal Dialog ---
+    if (showAllTournamentRulesDialog) {
+        AlertDialog(
+            onDismissRequest = { showAllTournamentRulesDialog = false },
+            containerColor = GamingCard,
+            shape = RoundedCornerShape(20.dp),
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("📜", fontSize = 24.sp)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            "Official Tournament Rules",
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 18.sp
+                        )
+                        Text(
+                            "Select any mode to read full esports regulations",
+                            color = NeonFireOrange,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            },
+            text = {
+                val allModesList = listOf(
+                    GameMode.LONE_WOLF_1V1_BODY to "🐺 LW 1v1 Body",
+                    GameMode.LONE_WOLF_1V1_HEAD to "🎯 LW 1v1 Head",
+                    GameMode.CS_1V1_HEAD_UNLIMITED to "💥 CS 1v1 Head Unlimited",
+                    GameMode.CS_2V2_BODY to "⚔️ CS 2v2 Body",
+                    GameMode.CS_1V1_BODY to "🛡️ CS 1v1 Body",
+                    GameMode.SOLO_PER_KILL to "☠️ Solo Per Kill",
+                    GameMode.DUO_PER_KILL to "👥 Duo Per Kill",
+                    GameMode.LONE_WOLF_LOSS_TO_WIN to "🔄 LW Loss to Win",
+                    GameMode.SQUAD to "🔥 Squad (4v4)",
+                    GameMode.CLASH_SQUAD to "🥊 Clash Squad (CS)",
+                    GameMode.SOLO to "🎯 Solo Scrims",
+                    GameMode.DUO to "👥 Duo Scrims"
+                )
+
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // Mode Selector Horizontal Row
+                    Text("Select Game Mode:", color = TextTertiary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    androidx.compose.foundation.lazy.LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(allModesList) { (mode, label) ->
+                            val isSel = rulesSelectedMode == mode
+                            Surface(
+                                color = if (isSel) NeonFireOrange else Color(0xFF1B1D2B),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable { rulesSelectedMode = mode }
+                            ) {
+                                Text(
+                                    label,
+                                    color = if (isSel) TextPrimary else TextSecondary,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (isSel) FontWeight.Bold else FontWeight.Medium,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Rules for currently selected mode
+                    Box(modifier = Modifier.heightIn(max = 350.dp)) {
+                        androidx.compose.foundation.lazy.LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            item {
+                                Surface(
+                                    color = Color(0xFF161928),
+                                    shape = RoundedCornerShape(10.dp),
+                                    border = CardDefaults.outlinedCardBorder().copy(
+                                        brush = Brush.horizontalGradient(listOf(ElectricCyan, NeonGold))
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(modifier = Modifier.padding(10.dp)) {
+                                        Text(
+                                            "🏆 ${rulesSelectedMode.displayName}",
+                                            color = NeonGold,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            fontSize = 14.sp
+                                        )
+                                        Text(
+                                            "Official rules applied automatically to all ${rulesSelectedMode.displayName} tournaments",
+                                            color = TextSecondary,
+                                            fontSize = 11.sp
+                                        )
+                                    }
+                                }
+                            }
+
+                            val currentRules = com.example.model.defaultRulesForMode(rulesSelectedMode)
+                            items(currentRules) { rule ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color(0xFF111320))
+                                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                                ) {
+                                    Text("• ", color = NeonFireOrange, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                    Text(
+                                        rule,
+                                        color = TextSecondary,
+                                        fontSize = 12.sp,
+                                        lineHeight = 17.sp,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showAllTournamentRulesDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = NeonFireOrange, contentColor = TextPrimary),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Understood", fontWeight = FontWeight.Bold)
+                }
+            }
         )
     }
 }

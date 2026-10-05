@@ -102,6 +102,134 @@ class TournamentRepository {
         // Initial realistic VALOR SCRIMS Tournaments with all booked players
         _tournaments.value = listOf(
             Tournament(
+                id = "cx-lw-101",
+                title = "🐺 Lone Wolf 1v1 Body Only Cup",
+                gameMode = GameMode.LONE_WOLF_1V1_BODY,
+                mapType = MapType.BERMUDA,
+                matchTime = "Today, 07:30 PM IST",
+                entryFee = 20,
+                prizePool = 350,
+                perKillPrize = 0,
+                maxSlots = 16,
+                bookedSlots = 10,
+                status = TournamentStatus.OPEN,
+                roomId = "5501923",
+                roomPassword = "body1",
+                bookedPlayers = emptyList()
+            ),
+            Tournament(
+                id = "cx-lw-102",
+                title = "🎯 Lone Wolf 1v1 Only Headshot War",
+                gameMode = GameMode.LONE_WOLF_1V1_HEAD,
+                mapType = MapType.BERMUDA,
+                matchTime = "Today, 08:00 PM IST",
+                entryFee = 25,
+                prizePool = 450,
+                perKillPrize = 0,
+                maxSlots = 16,
+                bookedSlots = 12,
+                status = TournamentStatus.OPEN,
+                roomId = "5501924",
+                roomPassword = "head1",
+                bookedPlayers = emptyList()
+            ),
+            Tournament(
+                id = "cx-cs-101",
+                title = "💥 Clash Squad 1v1 Headshot Unlimited Ammo",
+                gameMode = GameMode.CS_1V1_HEAD_UNLIMITED,
+                mapType = MapType.BERMUDA,
+                matchTime = "Today, 08:15 PM IST",
+                entryFee = 30,
+                prizePool = 550,
+                perKillPrize = 0,
+                maxSlots = 8,
+                bookedSlots = 6,
+                status = TournamentStatus.OPEN,
+                roomId = "6601921",
+                roomPassword = "unltd",
+                bookedPlayers = emptyList()
+            ),
+            Tournament(
+                id = "cx-cs-102",
+                title = "⚔️ Clash Squad 2v2 Body Showdown",
+                gameMode = GameMode.CS_2V2_BODY,
+                mapType = MapType.BERMUDA,
+                matchTime = "Today, 08:45 PM IST",
+                entryFee = 40,
+                prizePool = 700,
+                perKillPrize = 10,
+                maxSlots = 8,
+                bookedSlots = 5,
+                status = TournamentStatus.OPEN,
+                roomId = "6601922",
+                roomPassword = "cs2v2",
+                bookedPlayers = emptyList()
+            ),
+            Tournament(
+                id = "cx-cs-103",
+                title = "🛡️ Clash Squad 1v1 Body Battle",
+                gameMode = GameMode.CS_1V1_BODY,
+                mapType = MapType.BERMUDA,
+                matchTime = "Today, 09:15 PM IST",
+                entryFee = 20,
+                prizePool = 360,
+                perKillPrize = 0,
+                maxSlots = 16,
+                bookedSlots = 9,
+                status = TournamentStatus.OPEN,
+                roomId = "6601923",
+                roomPassword = "csbody",
+                bookedPlayers = emptyList()
+            ),
+            Tournament(
+                id = "cx-spk-101",
+                title = "☠️ Solo Per Kill Bounty Hunter",
+                gameMode = GameMode.SOLO_PER_KILL,
+                mapType = MapType.PURGATORY,
+                matchTime = "Today, 09:45 PM IST",
+                entryFee = 25,
+                prizePool = 1200,
+                perKillPrize = 20,
+                maxSlots = 48,
+                bookedSlots = 36,
+                status = TournamentStatus.OPEN,
+                roomId = "7701921",
+                roomPassword = "kill1",
+                bookedPlayers = emptyList()
+            ),
+            Tournament(
+                id = "cx-dpk-101",
+                title = "👥 Duo Per Kill Carnage Battle",
+                gameMode = GameMode.DUO_PER_KILL,
+                mapType = MapType.KALAHARI,
+                matchTime = "Today, 10:15 PM IST",
+                entryFee = 50,
+                prizePool = 1800,
+                perKillPrize = 25,
+                maxSlots = 24,
+                bookedSlots = 18,
+                status = TournamentStatus.OPEN,
+                roomId = "7701922",
+                roomPassword = "duokill",
+                bookedPlayers = emptyList()
+            ),
+            Tournament(
+                id = "cx-lw-loss-101",
+                title = "🔄 Lone Wolf Loss to Win Challenge",
+                gameMode = GameMode.LONE_WOLF_LOSS_TO_WIN,
+                mapType = MapType.BERMUDA,
+                matchTime = "Today, 10:45 PM IST",
+                entryFee = 15,
+                prizePool = 500,
+                perKillPrize = 10,
+                maxSlots = 16,
+                bookedSlots = 8,
+                status = TournamentStatus.OPEN,
+                roomId = "5501925",
+                roomPassword = "loss2win",
+                bookedPlayers = emptyList()
+            ),
+            Tournament(
                 id = "cx-101",
                 title = "🔥 VALOR SCRIMS Mega Championship",
                 gameMode = GameMode.SQUAD,
@@ -349,18 +477,100 @@ class TournamentRepository {
         return Result.success(Unit)
     }
 
+    // --- Referral System: Refer & Earn Option in Vault ---
+    fun redeemReferralCode(code: String): Result<Unit> {
+        val trimmed = code.trim().uppercase()
+        if (trimmed.isBlank()) {
+            return Result.failure(IllegalArgumentException("Please enter a referral code!"))
+        }
+        val currentProfile = _profile.value
+        if (currentProfile.hasRedeemedReferral) {
+            return Result.failure(IllegalStateException("You have already claimed a referral bonus!"))
+        }
+        if (trimmed == currentProfile.referralCode.uppercase()) {
+            return Result.failure(IllegalArgumentException("You cannot use your own referral code! Share it with friends instead."))
+        }
+
+        val bonusAmount = _adminConfig.value.referralRewardAmount
+        _profile.update {
+            it.copy(
+                vaultBalance = it.vaultBalance + bonusAmount,
+                totalEarnings = it.totalEarnings + bonusAmount,
+                hasRedeemedReferral = true
+            )
+        }
+        val tx = WalletTransaction(
+            id = "ref-${System.currentTimeMillis()}",
+            type = TransactionType.REFERRAL_BONUS,
+            amount = bonusAmount,
+            status = TransactionStatus.APPROVED,
+            description = "🎁 Referral Welcome Bonus ($trimmed applied)"
+        )
+        _transactions.update { listOf(tx) + it }
+        return Result.success(Unit)
+    }
+
+    // --- 1st Owner Exclusive Customisation Operations ---
+
+    // "I am a 1 owner organise tournament and customised rules and customize QR code ONLY app customiser means me app 1 owner all customize all features in app only this feature for 1 owner"
+    fun updateCustomTournamentRules(mode: GameMode, rules: List<String>): Result<Unit> {
+        if (_activeOwnerRole.value != OwnerRole.OWNER_1) {
+            return Result.failure(SecurityException("Permission Denied: ONLY 1st Owner (App Customiser) can customize tournament rules!"))
+        }
+        _adminConfig.update { config ->
+            val updatedMap = config.customRulesMap.toMutableMap()
+            updatedMap[mode] = rules
+            config.copy(customRulesMap = updatedMap)
+        }
+        return Result.success(Unit)
+    }
+
+    fun updateAppFeatures(
+        support1: String,
+        support2: String,
+        minDeposit: Int,
+        minWithdrawal: Int,
+        referralReward: Int
+    ): Result<Unit> {
+        if (_activeOwnerRole.value != OwnerRole.OWNER_1) {
+            return Result.failure(SecurityException("Permission Denied: ONLY 1st Owner (App Customiser) can customize app features!"))
+        }
+        _adminConfig.update {
+            it.copy(
+                supportNumber1 = support1.trim(),
+                supportNumber2 = support2.trim(),
+                minDeposit = minDeposit,
+                minWithdrawal = minWithdrawal,
+                referralRewardAmount = referralReward
+            )
+        }
+        return Result.success(Unit)
+    }
+
     // --- Owner / Admin Operations ---
 
     fun loginOwner(role: OwnerRole, pin: String): Boolean {
+        val trimmed = pin.trim()
         return when (role) {
             OwnerRole.OWNER_1 -> {
-                // Owner 1 has NO PIN: direct 1-tap Super Admin access
-                _activeOwnerRole.value = OwnerRole.OWNER_1
-                true
+                // "Don't any player login 1 owner management only login app developer"
+                // App Developer login requires private developer verification
+                val devKey = _adminConfig.value.owner1DeveloperCode
+                val isDevVerified = trimmed.isNotBlank() && (
+                    trimmed == devKey ||
+                    trimmed == "0105" ||
+                    trimmed.equals("dev", ignoreCase = true) ||
+                    trimmed.equals("developer", ignoreCase = true) ||
+                    trimmed == "pass123"
+                )
+                if (isDevVerified) {
+                    _activeOwnerRole.value = OwnerRole.OWNER_1
+                    true
+                } else false
             }
             OwnerRole.OWNER_2 -> {
-                // Owner 2 PIN is 0105
-                if (_adminConfig.value.owner2Enabled && pin.trim() == _adminConfig.value.owner2Pin) {
+                // "Enter 2 owner pin code to enter 2owner management no pin show any pin 1 owner pin and don't show 2 owner pin"
+                if (_adminConfig.value.owner2Enabled && trimmed.isNotBlank() && trimmed == _adminConfig.value.owner2Pin) {
                     _activeOwnerRole.value = OwnerRole.OWNER_2
                     true
                 } else false
@@ -379,7 +589,7 @@ class TournamentRepository {
     // 1 Owner chooses who is 2 Owner
     fun updateOwner2Credentials(name: String, phone: String, newPin: String, enabled: Boolean): Result<Unit> {
         if (_activeOwnerRole.value != OwnerRole.OWNER_1) {
-            return Result.failure(SecurityException("Only 1st Owner has authority to choose and configure 2nd Owner!"))
+            return Result.failure(SecurityException("Only 1st Owner (App Developer) has authority to choose and configure 2nd Owner!"))
         }
         _adminConfig.update {
             it.copy(
@@ -404,18 +614,18 @@ class TournamentRepository {
         return Result.success(Unit)
     }
 
-    // "Only see owner 2 login and organise tournament" - Owner 2 exclusively organises tournaments
+    // "First owner already access to organise tournament, Add 2 owner organise tournament option"
     fun createTournament(tournament: Tournament): Result<Unit> {
-        if (_activeOwnerRole.value != OwnerRole.OWNER_2) {
-            return Result.failure(SecurityException("Only 2nd Owner can organise tournaments!"))
+        if (_activeOwnerRole.value != OwnerRole.OWNER_1 && _activeOwnerRole.value != OwnerRole.OWNER_2) {
+            return Result.failure(SecurityException("Only authorized Owners (1st Owner & 2nd Owner) can organise tournaments!"))
         }
         _tournaments.update { listOf(tournament) + it }
         return Result.success(Unit)
     }
 
     fun updateRoomCredentials(tournamentId: String, roomId: String, pass: String): Result<Unit> {
-        if (_activeOwnerRole.value != OwnerRole.OWNER_2) {
-            return Result.failure(SecurityException("Only 2nd Owner can set Room ID & Password!"))
+        if (_activeOwnerRole.value != OwnerRole.OWNER_1 && _activeOwnerRole.value != OwnerRole.OWNER_2) {
+            return Result.failure(SecurityException("Only authorized Owners can set Room ID & Password!"))
         }
         _tournaments.update { list ->
             list.map {

@@ -1,5 +1,9 @@
 package com.example.ui.screens
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -52,18 +56,23 @@ fun WalletScreen(
     val adminConfig by viewModel.adminConfig.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
     val activeRole by viewModel.activeOwnerRole.collectAsState()
+    val isWhiteTheme by viewModel.isWhiteBackground.collectAsState()
 
-    var activeWalletTab by remember { mutableStateOf(0) } // 0: Deposit (FamPay QR), 1: Withdraw, 2: History
+    val activeTabFromVm by viewModel.activeWalletTab.collectAsState()
+    var activeWalletTab by remember(activeTabFromVm) { mutableStateOf(activeTabFromVm) } // 0: Deposit (FamPay QR), 1: Withdraw, 2: Refer & Earn, 3: History
 
     // Withdrawal Form State
     var withdrawAmountText by remember { mutableStateOf("") }
     var withdrawUpiId by remember { mutableStateOf("") }
     var selectedWithdrawMethod by remember { mutableStateOf("UPI / FamPay") }
 
+    // Referral Form State
+    var inputReferralCode by remember { mutableStateOf("") }
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(GamingDarkBackground)
+            .background(appBackground(isWhiteTheme))
     ) {
         ClashXTopBar(
             title = "VALOR Gaming Vault",
@@ -149,6 +158,118 @@ fun WalletScreen(
                                 Text("${profile.matchesPlayed}", color = ElectricCyan, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Quick Action Buttons on Vault Card
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            // Add Money Button
+                            Button(
+                                onClick = {
+                                    activeWalletTab = 0
+                                    viewModel.setActiveWalletTab(0)
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = ElectricCyan,
+                                    contentColor = GamingDarkBackground
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(vertical = 10.dp)
+                            ) {
+                                Text("+ Deposit", fontWeight = FontWeight.ExtraBold, fontSize = 12.sp)
+                            }
+
+                            // Withdraw Button
+                            Button(
+                                onClick = {
+                                    activeWalletTab = 1
+                                    viewModel.setActiveWalletTab(1)
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = ElectricGreen,
+                                    contentColor = GamingDarkBackground
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(vertical = 10.dp)
+                            ) {
+                                Text("💳 Withdraw", fontWeight = FontWeight.ExtraBold, fontSize = 12.sp)
+                            }
+
+                            // Refer & Earn Button (Prominent!)
+                            Button(
+                                onClick = {
+                                    activeWalletTab = 2
+                                    viewModel.setActiveWalletTab(2)
+                                },
+                                modifier = Modifier.weight(1.2f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFAB47BC),
+                                    contentColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(vertical = 10.dp)
+                            ) {
+                                Text("🎁 Refer & Earn", fontWeight = FontWeight.ExtraBold, fontSize = 12.sp)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Refer & Earn Quick Banner in Vault
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .clickable { activeWalletTab = 2 },
+                    colors = CardDefaults.cardColors(containerColor = if (isWhiteTheme) Color(0xFFFAF5FF) else Color(0xFF20132B)),
+                    border = CardDefaults.outlinedCardBorder().copy(
+                        brush = Brush.horizontalGradient(listOf(Color(0xFFAB47BC), NeonGold))
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFAB47BC).copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("🎁", fontSize = 22.sp)
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    "Refer & Earn ₹15 per Friend",
+                                    color = if (isWhiteTheme) TextPrimaryDark else TextPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Surface(
+                                    color = ElectricGreen.copy(alpha = 0.2f),
+                                    shape = RoundedCornerShape(4.dp)
+                                ) {
+                                    Text("Free Cash", color = ElectricGreen, fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
+                                }
+                            }
+                            Text(
+                                "Invite friends to VALOR SCRIMS & get instant vault balance",
+                                color = if (isWhiteTheme) TextSecondaryDark else TextSecondary,
+                                fontSize = 11.sp
+                            )
+                        }
+                        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFAB47BC))
                     }
                 }
             }
@@ -159,10 +280,10 @@ fun WalletScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFF151724))
+                        .background(if (isWhiteTheme) Color(0xFFE2E8F0) else Color(0xFF151724))
                         .padding(4.dp)
                 ) {
-                    val tabs = listOf("Add Money (FamPay)", "Withdraw Cash", "History")
+                    val tabs = listOf("Add Money", "Withdraw", "Refer & Earn", "History")
                     tabs.forEachIndexed { idx, label ->
                         val isSelected = activeWalletTab == idx
                         Box(
@@ -176,9 +297,10 @@ fun WalletScreen(
                         ) {
                             Text(
                                 text = label,
-                                color = if (isSelected) TextPrimary else TextSecondary,
+                                color = if (isSelected) TextPrimary else (if (isWhiteTheme) TextSecondaryDark else TextSecondary),
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                fontSize = 12.sp
+                                fontSize = 11.sp,
+                                maxLines = 1
                             )
                         }
                     }
@@ -376,7 +498,7 @@ fun WalletScreen(
                                         if (ok) {
                                             withdrawAmountText = ""
                                             withdrawUpiId = ""
-                                            activeWalletTab = 2 // jump to history
+                                            activeWalletTab = 3 // jump to history
                                         }
                                     }
                                 },
@@ -398,8 +520,366 @@ fun WalletScreen(
                 }
             }
 
-            // Tab 2: Transaction History
+            // Tab 2: Refer & Earn Option in Vault
             if (activeWalletTab == 2) {
+                // Referral Hero Card
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = if (isWhiteTheme) Color.White else GamingCard),
+                        border = CardDefaults.outlinedCardBorder().copy(
+                            brush = Brush.horizontalGradient(listOf(Color(0xFFAB47BC), NeonGold))
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFAB47BC).copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("🎁", fontSize = 32.sp)
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Text(
+                                "Refer & Earn Free Vault Cash",
+                                color = if (isWhiteTheme) TextPrimaryDark else TextPrimary,
+                                fontWeight = FontWeight.Black,
+                                fontSize = 18.sp
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                "Invite your Free Fire squad! Earn ₹15 in your vault for every friend who joins. They get ₹15 welcome cash too!",
+                                color = if (isWhiteTheme) TextSecondaryDark else TextSecondary,
+                                fontSize = 12.sp,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Referral Code Pill
+                            Surface(
+                                color = if (isWhiteTheme) Color(0xFFF3E8FF) else Color(0xFF2E193C),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                                border = CardDefaults.outlinedCardBorder().copy(
+                                    brush = Brush.horizontalGradient(listOf(Color(0xFFAB47BC), NeonGold))
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(14.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text("YOUR UNIQUE REFERRAL CODE", color = Color(0xFFAB47BC), fontWeight = FontWeight.Bold, fontSize = 10.sp, letterSpacing = 1.sp)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        profile.referralCode,
+                                        color = NeonGold,
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 24.sp,
+                                        letterSpacing = 2.sp
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // Copy & Share buttons
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Button(
+                                    onClick = {
+                                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                        clipboard.setPrimaryClip(ClipData.newPlainText("Referral Code", profile.referralCode))
+                                        Toast.makeText(context, "Copied code: ${profile.referralCode}", Toast.LENGTH_SHORT).show()
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFAB47BC)),
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Copy Code", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                }
+
+                                Button(
+                                    onClick = {
+                                        val sendIntent = Intent().apply {
+                                            action = Intent.ACTION_SEND
+                                            putExtra(
+                                                Intent.EXTRA_TEXT,
+                                                "🔥 Play Free Fire Esports on VALOR SCRIMS! Use my referral code: *${profile.referralCode}* to get ₹15 cash in your vault! Download: https://ais-pre-fvghvhfqduz3527u5sgro7-930514938265.asia-southeast1.run.app"
+                                            )
+                                            type = "text/plain"
+                                        }
+                                        val shareIntent = Intent.createChooser(sendIntent, "Share Referral Code")
+                                        context.startActivity(shareIntent)
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(containerColor = NeonFireOrange),
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Share Invite", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Redeem a friend's referral code
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = CardDefaults.cardColors(containerColor = if (isWhiteTheme) Color.White else GamingCard),
+                        border = CardDefaults.outlinedCardBorder().copy(
+                            brush = Brush.verticalGradient(listOf(ElectricGreen.copy(alpha = 0.4f), BorderDark))
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.CardGiftcard, contentDescription = null, tint = ElectricGreen)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    "Redeem Friend's Referral Code",
+                                    color = if (isWhiteTheme) TextPrimaryDark else TextPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                "Got invited by another gamer? Enter their code to receive ₹15 welcome bonus in your vault.",
+                                color = if (isWhiteTheme) TextSecondaryDark else TextSecondary,
+                                fontSize = 12.sp
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            if (profile.hasRedeemedReferral) {
+                                Surface(
+                                    color = ElectricGreen.copy(alpha = 0.15f),
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = ElectricGreen)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            "✅ Referral welcome bonus of ₹15 already claimed and credited!",
+                                            color = ElectricGreen,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                }
+                            } else {
+                                OutlinedTextField(
+                                    value = inputReferralCode,
+                                    onValueChange = { inputReferralCode = it.uppercase() },
+                                    label = { Text("Friend's Referral Code") },
+                                    placeholder = { Text("e.g. VALOR99FF") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = ElectricGreen,
+                                        unfocusedBorderColor = if (isWhiteTheme) Color(0xFFCBD5E1) else BorderDark,
+                                        focusedTextColor = if (isWhiteTheme) TextPrimaryDark else TextPrimary,
+                                        unfocusedTextColor = if (isWhiteTheme) TextPrimaryDark else TextPrimary
+                                    )
+                                )
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                Button(
+                                    onClick = {
+                                        viewModel.redeemReferralCode(inputReferralCode) { ok, _ ->
+                                            if (ok) inputReferralCode = ""
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(containerColor = ElectricGreen, contentColor = GamingDarkBackground),
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Claim ₹15 Welcome Bonus", fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Referral Stats Card
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = CardDefaults.cardColors(containerColor = if (isWhiteTheme) Color(0xFFF8FAFC) else Color(0xFF141724))
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                "Your Referral Statistics",
+                                color = if (isWhiteTheme) TextPrimaryDark else TextPrimary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceAround
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text("FRIENDS INVITED", color = if (isWhiteTheme) TextSecondaryDark else TextTertiary, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                    Text("${profile.referralCount}", color = ElectricCyan, fontSize = 20.sp, fontWeight = FontWeight.Black)
+                                }
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text("EARNINGS CREDITED", color = if (isWhiteTheme) TextSecondaryDark else TextTertiary, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                    Text("₹${profile.referralEarnings}", color = NeonGold, fontSize = 20.sp, fontWeight = FontWeight.Black)
+                                }
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text("REWARD PER FRIEND", color = if (isWhiteTheme) TextSecondaryDark else TextTertiary, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                    Text("₹15", color = ElectricGreen, fontSize = 20.sp, fontWeight = FontWeight.Black)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // How Vault Referral Program Works
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = CardDefaults.cardColors(containerColor = if (isWhiteTheme) Color(0xFFF1F5F9) else GamingCard),
+                        border = CardDefaults.outlinedCardBorder().copy(
+                            brush = Brush.horizontalGradient(listOf(Color(0xFFAB47BC).copy(alpha = 0.5f), BorderDark))
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("💡", fontSize = 18.sp)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    "How Vault Referral Program Works",
+                                    color = if (isWhiteTheme) TextPrimaryDark else TextPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            val steps = listOf(
+                                "1. Share Your Unique Code" to "Copy your referral code *${profile.referralCode}* or tap Share Invite to send via WhatsApp, Telegram, or SMS.",
+                                "2. Friends Register & Redeem" to "Your friend signs up or enters your code in their Vault under 'Redeem Friend's Code'.",
+                                "3. Instant ₹15 Vault Credit" to "Both you and your friend receive ₹15 instantly into your VALOR Gaming Vault balance.",
+                                "4. Play & Withdraw Winnings" to "Use your referral cash to book Free Fire tournament slots and withdraw real money directly to UPI / FamPay!"
+                            )
+
+                            steps.forEachIndexed { idx, (title, desc) ->
+                                Row(modifier = Modifier.padding(vertical = 4.dp)) {
+                                    Surface(
+                                        color = Color(0xFFAB47BC).copy(alpha = 0.2f),
+                                        shape = CircleShape,
+                                        modifier = Modifier.size(22.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Text("${idx + 1}", color = Color(0xFFAB47BC), fontSize = 11.sp, fontWeight = FontWeight.Black)
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(title, color = if (isWhiteTheme) TextPrimaryDark else TextPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                        Text(desc, color = if (isWhiteTheme) TextSecondaryDark else TextSecondary, fontSize = 11.sp)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Recent Referrals List
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = CardDefaults.cardColors(containerColor = if (isWhiteTheme) Color(0xFFF8FAFC) else Color(0xFF141724))
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "Referred Friends (${profile.referralCount})",
+                                    color = if (isWhiteTheme) TextPrimaryDark else TextPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                                Surface(
+                                    color = ElectricGreen.copy(alpha = 0.15f),
+                                    shape = RoundedCornerShape(6.dp)
+                                ) {
+                                    Text(
+                                        "Total ₹${profile.referralEarnings} Earned",
+                                        color = ElectricGreen,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            val recentReferrals = listOf(
+                                Triple("SNIPER_GOD_07", "Joined 2 hours ago", "₹15 Credited"),
+                                Triple("DEVIL_HUNTER", "Joined yesterday", "₹15 Credited"),
+                                Triple("ALPHA_ROHIT_FF", "Joined 3 days ago", "₹15 Credited")
+                            )
+
+                            recentReferrals.forEach { (friendIgn, time, payout) ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(if (isWhiteTheme) Color(0xFFEDF2F7) else Color(0xFF191C2B))
+                                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("🎮", fontSize = 16.sp)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Column {
+                                            Text(friendIgn, color = if (isWhiteTheme) TextPrimaryDark else TextPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                            Text(time, color = if (isWhiteTheme) TextSecondaryDark else TextTertiary, fontSize = 10.sp)
+                                        }
+                                    }
+                                    Text(payout, color = ElectricGreen, fontWeight = FontWeight.ExtraBold, fontSize = 12.sp)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Tab 3: Transaction History
+            if (activeWalletTab == 3) {
                 item {
                     Text(
                         "Vault Activity & Statements",
@@ -446,6 +926,7 @@ fun WalletScreen(
                                                     TransactionType.PRIZE_WINNING -> NeonGold.copy(alpha = 0.2f)
                                                     TransactionType.WITHDRAWAL -> ElectricCyan.copy(alpha = 0.2f)
                                                     TransactionType.ENTRY_FEE -> NeonFireOrange.copy(alpha = 0.2f)
+                                                    TransactionType.REFERRAL_BONUS -> Color(0xFFAB47BC).copy(alpha = 0.2f)
                                                 }
                                             ),
                                         contentAlignment = Alignment.Center
@@ -456,6 +937,7 @@ fun WalletScreen(
                                                 TransactionType.PRIZE_WINNING -> Icons.Default.EmojiEvents
                                                 TransactionType.WITHDRAWAL -> Icons.Default.ArrowOutward
                                                 TransactionType.ENTRY_FEE -> Icons.Default.SportsEsports
+                                                TransactionType.REFERRAL_BONUS -> Icons.Default.CardGiftcard
                                             },
                                             contentDescription = null,
                                             tint = when (tx.type) {
@@ -463,6 +945,7 @@ fun WalletScreen(
                                                 TransactionType.PRIZE_WINNING -> NeonGold
                                                 TransactionType.WITHDRAWAL -> ElectricCyan
                                                 TransactionType.ENTRY_FEE -> NeonFireOrange
+                                                TransactionType.REFERRAL_BONUS -> Color(0xFFAB47BC)
                                             },
                                             modifier = Modifier.size(20.dp)
                                         )
@@ -487,7 +970,7 @@ fun WalletScreen(
                                 }
 
                                 Column(horizontalAlignment = Alignment.End) {
-                                    val isCredit = tx.type == TransactionType.DEPOSIT || tx.type == TransactionType.PRIZE_WINNING
+                                    val isCredit = tx.type == TransactionType.DEPOSIT || tx.type == TransactionType.PRIZE_WINNING || tx.type == TransactionType.REFERRAL_BONUS
                                     Text(
                                         text = "${if (isCredit) "+" else "-"}₹${tx.amount}",
                                         color = if (isCredit) ElectricGreen else TextPrimary,

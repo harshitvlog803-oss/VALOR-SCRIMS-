@@ -70,6 +70,7 @@ fun TournamentDetailScreen(
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = buildList {
         add("Overview")
+        add("Rules & Fair Play")
         add("Scoreboard")
         if (tournament.gameMode == GameMode.CLASH_SQUAD || tournament.bracketMatches.isNotEmpty()) {
             add("Bracket")
@@ -411,6 +412,104 @@ fun TournamentDetailScreen(
                                 Text("• 3rd Place: 8 Points", color = TextSecondary, fontSize = 13.sp)
                                 Text("• 4th - 10th Place: 7 to 1 Points", color = TextSecondary, fontSize = 13.sp)
                                 Text("• Each Kill: 1 Point (Plus cash prize ₹${tournament.perKillPrize} per kill)", color = NeonGold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+                }
+
+                "Rules & Fair Play" -> {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = GamingCard),
+                            shape = RoundedCornerShape(16.dp),
+                            border = CardDefaults.outlinedCardBorder().copy(
+                                brush = Brush.horizontalGradient(listOf(NeonFireOrange, NeonGold))
+                            )
+                        ) {
+                            Column(modifier = Modifier.padding(18.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("📜", fontSize = 22.sp)
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            "Official Tournament Regulations",
+                                            color = TextPrimary,
+                                            fontWeight = FontWeight.Black,
+                                            fontSize = 16.sp
+                                        )
+                                        Text(
+                                            "${tournament.gameMode.displayName} • Map: ${tournament.mapType.displayName}",
+                                            color = NeonFireOrange,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(14.dp))
+
+                                Surface(
+                                    color = NeonFireOrange.copy(alpha = 0.15f),
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        "⚠️ Violating any tournament rule will result in immediate disqualification, forfeiture of entry fee, and zero prize payout.",
+                                        color = NeonFireOrange,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.padding(12.dp)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Text("All Match Rules & Regulations:", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                tournament.rules.forEachIndexed { idx, rule ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 5.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(Color(0xFF131524))
+                                            .padding(10.dp),
+                                        verticalAlignment = Alignment.Top
+                                    ) {
+                                        Surface(
+                                            color = NeonGold.copy(alpha = 0.2f),
+                                            shape = CircleShape,
+                                            modifier = Modifier.size(24.dp)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Text("${idx + 1}", color = NeonGold, fontSize = 11.sp, fontWeight = FontWeight.Black)
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Text(
+                                            rule,
+                                            color = TextSecondary,
+                                            fontSize = 12.sp,
+                                            lineHeight = 18.sp,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(16.dp))
+                                HorizontalDivider(color = BorderDark)
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Text("Anti-Cheat & Dispute Policy", color = DangerRed, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    "• Any use of third-party tools, mod APKs, configs, emulators, or antenna hacks leads to permanent UID ban.\n• Players must submit screenshot proof to Admin within 15 minutes of match conclusion if there is any dispute.\n• Match referee decision is 100% final and binding.",
+                                    color = TextSecondary,
+                                    fontSize = 12.sp,
+                                    lineHeight = 17.sp
+                                )
                             }
                         }
                     }
